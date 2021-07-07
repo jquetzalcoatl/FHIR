@@ -161,12 +161,12 @@ else:
 
 # display data
 with st.beta_container():
-	show_stats = st.checkbox("See stats", True)
-	if show_stats:
-		a.statDict
-	show_data = st.checkbox("See the raw data?")
-	if show_data:
-		a.df
+	# show_stats = st.checkbox("See stats", True)
+	if st.checkbox("See stats", True):
+		st.json(a.statDict)
+	# show_data = st.checkbox("See the raw data?")
+	if st.checkbox("See the raw data?"):
+		st.dataframe(a.df)
 	# notes
 	st.subheader("Notes")
 	st.write(
@@ -178,3 +178,14 @@ with st.beta_container():
 		ADD MORE STUFF
 		"""
 	)
+
+with st.sidebar:
+	st.subheader("About")
+	st.write("Sin embargo, antes de llegar al verso final \
+	ya había compredido que no saldría jamás de ese cuarto, pues estaba previsto \
+	que la ciudad de los espejos (o los espejismos) sería arrasada por el \
+	viento y desterrada de la memoria de los hombres en el instante en que \
+	Aureliano Babilonia acabara de descifrar los pergaminos, y que todo lo \
+	escrito en ellos era irrepetible desde siempre y para siempre porque las \
+	estirpes condenadas a cien años de soledad no tenian una segunda \
+	oportunidad sobre la tierra.")
