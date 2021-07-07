@@ -87,7 +87,7 @@ class stats(ObsDF):
 
 	def getStats(self, thrsUL=55, thrsBR=80, thrsAR=200):
 		self.statDict ={
-			'mean' : str(np.mean(self.reducedDF['CGM'])),
+			'mean' : str(round(np.mean(self.reducedDF['CGM']),3)),
 			'median' : str(np.median(self.reducedDF['CGM'])),
 			'min' : str(np.min(self.reducedDF['CGM'])),
 			'max' : str(np.max(self.reducedDF['CGM'])),
