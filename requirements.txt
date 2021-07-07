@@ -4,4 +4,3 @@ matplotlib
 datetime
 seaborn
 argparse
-os
