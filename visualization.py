@@ -150,7 +150,7 @@ def show_plot(kind: str):
 		st.pyplot(fig)
 	elif kind == "altair":
 		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
-		c = alt.Chart(a.reducedDF).mark_circle().encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), y='CGM', tooltip=['Patients', 'Dates', 'CGM']).interactive()
+		c = alt.Chart(a.reducedDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), y='CGM', tooltip=['Patients', 'Dates', 'CGM']).interactive()
 		st.write(c)
 		# x='Dates'
 
