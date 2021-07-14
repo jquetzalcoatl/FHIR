@@ -81,8 +81,8 @@ thrsAR=200
 
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
-	if st.beta_expander("Set thresholds"):
-	# if show_params:
+	show_params = st.beta_expander("Set thresholds")
+	if show_params:
 		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
