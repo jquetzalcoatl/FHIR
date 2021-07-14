@@ -61,15 +61,20 @@ with st.beta_container():
 	# st.write("""See the code and plots for five libraries at once.""")
 
 # LAYING OUT THE TOP SECTION OF THE APP
-row1_1, row1_2 = st.beta_columns((2,2))
+# row1_1, row1_2 = st.beta_columns((2,2))
 # np.max(a.dates)
-with row1_1:
-	st.title("Patient")
-	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
+# with row1_1:
+# 	st.title("Patient")
+# 	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
+
+with st.sidebar:
+	with st.beta_expander("Choose Patient"):
+		chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
 
 a.getWindow(ptId=chart_type, dateStart=0, dateEnd=0)
 
-with row1_2:
+# with row1_2:
+with st.beta_container():
 	st.title("Time Window")
 	hour_selected = st.slider("Select Time Window", value=(a.getDate(str(a.reducedDF['Dates'].iloc[0])), a.getDate(str(a.reducedDF['Dates'].iloc[-1]))), min_value=np.min(a.dates), max_value=np.max(a.dates))
 	# st.write(hour_selected[0])
@@ -177,11 +182,15 @@ else:
 # display data
 with st.beta_container():
 	# show_stats = st.checkbox("See stats", True)
-	if st.checkbox("See stats", True):
+	# if st.checkbox("See stats", True):
+	# 	st.json(a.statDict)
+	with st.beta_expander("See Stats"):
 		st.json(a.statDict)
 	# show_data = st.checkbox("See the raw data?")
-	if st.checkbox("See the raw data?"):
+	with st.beta_expander("See raw data"):
 		st.dataframe(a.df)
+	# if st.checkbox("See the raw data?"):
+	# 	st.dataframe(a.df)
 	# notes
 	st.subheader("Notes")
 	st.write(
