@@ -10,7 +10,7 @@ from utils.stats import stats
 import argparse
 import os
 
-# alt.Chart(a.reducedDF).mark_circle().encode(x='Dates', y='CGM', tooltip=['Patients', 'Dates', 'CGM'])
+
 # $streamlit run visualization.py -- --date 2021-07-06
 # https://github.com/streamlit/streamlit/issues/337#issuecomment-544860528
 
@@ -150,8 +150,9 @@ def show_plot(kind: str):
 		st.pyplot(fig)
 	elif kind == "altair":
 		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
-		c = alt.Chart(a.reducedDF).mark_circle().encode(x='Dates', y='CGM', tooltip=['Patients', 'Dates', 'CGM'])
+		c = alt.Chart(a.reducedDF).mark_circle().encode(alt.X('Dates', axis=alt.Axis(labelAngle=0)), y='CGM', tooltip=['Patients', 'Dates', 'CGM'])
 		st.write(c)
+		# x='Dates'
 
 
 # output plots
