@@ -51,7 +51,8 @@ a = stats((jsonObj, df))
 
 
 # can only set this once, first thing to set
-st.set_page_config(layout="wide")
+apptitle = 'TS-Registry Dashboard'
+st.set_page_config(page_title=apptitle, layout="wide")
 
 with st.beta_container():
 	st.title("TS Data Visualization Demo")
@@ -78,12 +79,20 @@ thrsBR=80
 thrsAR=200
 # a.getStats(thrsUL=55, thrsBR=80, thrsAR=200)
 
-with st.beta_container():
-	show_params = st.checkbox("Set thresholds", False)
-	if show_params:
+with st.sidebar:
+	# show_params = st.checkbox("Set thresholds", False)
+	if st.beta_expander("Set thresholds"):
+	# if show_params:
 		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
+
+with st.beta_container():
+	# show_params = st.checkbox("Set thresholds", False)
+	# if show_params:
+	# 	thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
+	# 	thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
+	# 	thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
 	st.subheader(f"Showing:  {chart_type}")
 	st.write("")
 
