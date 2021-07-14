@@ -30,6 +30,7 @@ except SystemExit as e:
 # a = stats(date="2021-06-15", MAX=5)
 
 path = os.getcwd() + "/TS-BulkExport-" + args.date
+# path = os.getcwd() + "/TS-BulkExport-" + "2021-07-05"
 
 ####
 # os.getcwd()
@@ -48,7 +49,6 @@ df = pd.read_csv(path + "/Observations.csv")
 a = stats((jsonObj, df))
 # a.df
 ###
-
 
 # can only set this once, first thing to set
 apptitle = 'TS-Registry Dashboard'
@@ -147,6 +147,11 @@ def show_plot(kind: str):
 		sns.lineplot(data=a.reducedDF.iloc[:,1:2], ax=ax, hue="event", style="event", c='red')
 		# st.plotly_chart(plot, use_container_width=True)
 		st.pyplot(fig)
+	elif kind == "altair":
+		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
+		c = alt.Chart(a.reducedDF).mark_circle().encode(
+		x='Dates', y='CGM', tooltip=['Patients', 'Dates', 'CGM'])
+		st.write(c)
 
 
 # output plots
@@ -155,8 +160,8 @@ if two_cols:
 		show_plot(kind="CGM time series")
 	with col2:
 		show_plot(kind="CGM Histogram")
-	# with col1:
-	# 	show_plot(kind="Matplotlib")
+	with col1:
+		show_plot(kind="altair")
 	# with col2:
 	# 	show_plot(kind="Matplotlib")
 	# with col1:
