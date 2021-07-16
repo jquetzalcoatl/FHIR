@@ -112,7 +112,10 @@ class stats(ObsDF):
 			'PerInRange' : str(round(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))/len(self.reducedDF['CGM']),3)),
 			'PerAboveRange' : str(round(sum(self.reducedDF['CGM'] >= thrsAR)/len(self.reducedDF['CGM']),3)),
 			'CoeffVariation' : str(round(np.std(self.reducedDF['CGM'])/np.mean(self.reducedDF['CGM']),3)),
+			'GMI' : str(round(np.mean(self.reducedDF['CGM']) * 0.02392 + 3.31, 3)),
 			}
 
 if __name__ == '__main__':
     stats("2021-06-01")
+
+# GMI (%) = 3.31 + 0.02392 × [mean glucose in mg/dL] or GMI (mmol/mol) = 12.71 + 4.70587 × [mean glucose in mmol/L].

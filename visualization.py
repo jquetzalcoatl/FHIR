@@ -133,7 +133,7 @@ def show_plot(kind: str):
 		fig, ax = plt.subplots()
 		ax.set_xticklabels(a.dates, rotation=45)
 		ax.set_xlabel("Date")
-		ax.set_ylabel("CGM")
+		ax.set_ylabel("CGM (mg/dL)")
 		ll = a.reducedDF.shape[0]
 		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
 		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
