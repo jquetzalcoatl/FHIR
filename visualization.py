@@ -91,12 +91,12 @@ with st.beta_container():
 	hour_selected0 = (a.getDate(str(a.reducedDF['Dates'].iloc[0])), a.getDate(str(a.reducedDF['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
 
-row1_1, row1_2 = st.beta_columns((2,2))
-with row1_1:
-	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-
-with row1_2:
-	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
+# row1_1, row1_2 = st.beta_columns((2,2))
+# with row1_1:
+# 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
+#
+# with row1_2:
+# 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
 
 a.getWindow2(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
 thrsUL=55
