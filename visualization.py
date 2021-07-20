@@ -53,6 +53,8 @@ a = stats((jsonObj, df))
 # a.Obs[0]
 #Dashboard
 # can only set this once, first thing to set
+
+CURRENT_THEME = "light"
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 
