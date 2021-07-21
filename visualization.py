@@ -68,12 +68,16 @@ with st.beta_container():
 # with row1_1:
 # 	st.title("Patient")
 # 	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
-
+alpha = 1.0
 with st.sidebar:
 	x = st.radio("Select units:", ("mg/dL", "mmol/L"))
 	st.write(x)
 	with st.beta_expander("Choose Patient"):
 		chart_type = st.selectbox("", np.unique(a.Pts).tolist())
+if x == "mmol/L":
+	alpha = 1.0/18.0
+elif x == "mg/dL":
+	alpha = 1.0
 
 a.getWindow(ptId=chart_type, dateStart=0, dateEnd=0)
 
@@ -102,18 +106,18 @@ with st.beta_container():
 # 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
 
 a.getWindow2(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
-thrsUL=55
-thrsBR=80
-thrsAR=200
+thrsUL=54 * alpha
+thrsBR=72 * alpha
+thrsAR=198 * alpha
 # a.getStats(thrsUL=55, thrsBR=80, thrsAR=200)
 
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
 	with st.beta_expander("Set thresholds"):
-		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
-		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
-		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
+		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 396 * alpha, value=54 * alpha)
+		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 396 * alpha, value=thrsUL+18 * alpha)
+		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 396 * alpha, value=thrsBR+126 * alpha)
 
 with st.beta_container():
 	# show_params = st.checkbox("Set thresholds", False)
@@ -145,17 +149,17 @@ def show_plot(kind: str):
 		fig, ax = plt.subplots()
 		ax.set_xticklabels(a.dates, rotation=45)
 		ax.set_xlabel("Date")
-		ax.set_ylabel("CGM (mg/dL)")
+		ax.set_ylabel(f'CGM ({x})')
 		ll = a.reducedDF.shape[0]
-		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
-		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
+		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1] * alpha, c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
+		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1] * alpha, c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
 		st.pyplot(fig)
 	elif kind == "CGM Histogram":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(a.CGM, rotation=0)
+		ax.set_xticklabels(a.CGM * alpha, rotation=0)
 		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(a.reducedDF['CGM'], ax=ax, kde=True, bins=b)
+		sns.histplot(a.reducedDF['CGM'] * alpha, ax=ax, kde=True, bins=b)
 		# sns.displot(a.reducedDF['CGM'], ax=ax)
 		st.pyplot(fig)
 	elif kind == "Matplotlib":
