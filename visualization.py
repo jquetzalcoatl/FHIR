@@ -151,15 +151,15 @@ def show_plot(kind: str):
 		ax.set_xlabel("Date")
 		ax.set_ylabel(f'CGM ({x})')
 		ll = a.reducedDF.shape[0]
-		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1] * alpha, c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
-		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1] * alpha, c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
+		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
+		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
 		st.pyplot(fig)
 	elif kind == "CGM Histogram":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(a.CGM * alpha, rotation=0)
+		ax.set_xticklabels(a.CGM, rotation=0)
 		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(a.reducedDF['CGM'] * alpha, ax=ax, kde=True, bins=b)
+		sns.histplot(a.reducedDF['CGM'], ax=ax, kde=True, bins=b)
 		# sns.displot(a.reducedDF['CGM'], ax=ax)
 		st.pyplot(fig)
 	elif kind == "Matplotlib":
