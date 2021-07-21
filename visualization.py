@@ -68,9 +68,10 @@ with st.beta_container():
 # with row1_1:
 # 	st.title("Patient")
 # 	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
-
+col1, col2 = st.beta_columns(2)
 with st.sidebar:
-	x = st.select_slider("Select units:", ["mg/dL", "mmol/L"])
+	with col1:
+		x = st.select_slider("Select units:", ["mg/dL", "mmol/L"])
 	st.write(x)
 	with st.beta_expander("Choose Patient"):
 		chart_type = st.selectbox("", np.unique(a.Pts).tolist())
