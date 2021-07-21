@@ -1,0 +1,5 @@
+root-resourceType,root-id,root-meta-versionId,root-meta-lastUpdated,root-url,root-name,root-status,root-date,root-publisher,root-description,root-content
+CodeSystem,327317,1,2021-06-23T18:17:20.442-04:00,trustsphere.com/comfortabilitySystem,Comfortability Codes,active,2019-07-30,Me,A set of codes describing how comfortable an individual is,not-present
+CodeSystem,327318,1,2021-06-23T18:17:49.593-04:00,trustsphere.com/confidence,Confidence Codes,active,2019-07-30,Me,A set of confidence questionnaire answer codes,not-present
+CodeSystem,327319,1,2021-06-23T18:18:06.849-04:00,trustsphere.com/managedsystem,Managed Codes,active,2019-07-30,Me,A set of codes regarding how wel an establishment is managed,not-present
+CodeSystem,327320,1,2021-06-23T18:18:17.151-04:00,trustsphere.com/satisfiedSystem,Satisfied Codes,active,2019-07-30,Me,A set of codes describing how satisfied an individual is from 1 to 5,not-present

@@ -20,7 +20,7 @@ import os
 #PARSING
 parser = argparse.ArgumentParser(description='This app shows CGM')
 
-parser.add_argument('--date', dest="date", type=str, default="2021-07-05",
+parser.add_argument('--date', dest="date", type=str, default="2021-07-21",
 					help='Specify date since tag for FHIR bulk export. \n Default set to 2021-07-05')
 
 try:
@@ -53,7 +53,7 @@ a = stats((jsonObj, df))
 # a.Obs[0]
 #Dashboard
 # can only set this once, first thing to set
-
+# a.reducedDF
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 
@@ -71,7 +71,9 @@ with st.beta_container():
 alpha = 1.0
 with st.sidebar:
 	x = st.radio("Select units:", ("mg/dL", "mmol/L"))
-	st.write(x)
+	if x == "mmol/L":
+		st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
+	# st.write(x)
 	with st.beta_expander("Choose Patient"):
 		chart_type = st.selectbox("", np.unique(a.Pts).tolist())
 if x == "mmol/L":
@@ -106,18 +108,18 @@ with st.beta_container():
 # 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
 
 a.getWindow2(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
-thrsUL=54 * alpha
-thrsBR=72 * alpha
-thrsAR=198 * alpha
+thrsUL=54
+thrsBR=72
+thrsAR=198
 # a.getStats(thrsUL=55, thrsBR=80, thrsAR=200)
-int(18.0*2)
+
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
 	with st.beta_expander("Set thresholds"):
-		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = int(396 * alpha), value=int(54 * alpha))
-		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = int(396 * alpha), value=int(thrsUL+18 * alpha))
-		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = int(396 * alpha), value=int(thrsBR+126 * alpha))
+		thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
+		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
+		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
 
 with st.beta_container():
 	# show_params = st.checkbox("Set thresholds", False)
@@ -128,7 +130,7 @@ with st.beta_container():
 	st.subheader(f"Displaying:  {chart_type}")
 	st.write("")
 
-a.getStats(thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR)
+a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
 
 # sns.lineplot(data=a.reducedDF.iloc[:,1:2], palette=['blue'], linewidth=2.5, hue="red", style="red", c='red')
 def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
@@ -154,12 +156,29 @@ def show_plot(kind: str):
 		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
 		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,1], c=[coloring(a.reducedDF.iloc[i,1], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
 		st.pyplot(fig)
+	elif kind == "CGM time series 2":
+		fig, ax = plt.subplots()
+		ax.set_xticklabels(a.dates, rotation=45)
+		ax.set_xlabel("Date")
+		ax.set_ylabel(f'CGM ({x})')
+		ll = a.reducedDF.shape[0]
+		ax.plot([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,3], c='black', linewidth=0.05)#matplotlib_plot(chart_type, df)
+		ax.scatter([a.getDate(str(a.reducedDF.iloc[i,2])) for i in range(a.reducedDF.shape[0])], a.reducedDF.iloc[:,3], c=[coloring(a.reducedDF.iloc[i,3], thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR) for i in range(a.reducedDF.shape[0])])
+		st.pyplot(fig)
 	elif kind == "CGM Histogram":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(a.CGM, rotation=0)
+		# ax.set_xticklabels(a.CGM, rotation=0)
 		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
 		sns.histplot(a.reducedDF['CGM'], ax=ax, kde=True, bins=b)
+		# sns.displot(a.reducedDF['CGM'], ax=ax)
+		st.pyplot(fig)
+	elif kind == "CGM Histogram 2":
+		fig, ax = plt.subplots()
+		# ax.set_xticklabels(a.reducedDF['CGM (mmol/L)'], rotation=0)
+		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
+		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
+		sns.histplot(a.reducedDF['CGM (mmol/L)'], ax=ax, kde=True, bins=b)
 		# sns.displot(a.reducedDF['CGM'], ax=ax)
 		st.pyplot(fig)
 	elif kind == "Matplotlib":
@@ -179,11 +198,21 @@ def show_plot(kind: str):
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
 		st.write(c + linethrsUL + linethrsBR + linethrsAR)
 		# x='Dates'
+	elif kind == "altair 2":
+		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
+		c = alt.Chart(a.reducedDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM (mmol/L)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM (mmol/L)']).properties(width=800, height=400).interactive()
+		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsUL]})).mark_rule().encode(y='CGM (mmol/L)')
+		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsBR]})).mark_rule().encode(y='CGM (mmol/L)')
+		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsAR]})).mark_rule().encode(y='CGM (mmol/L)')
+		st.write(c + linethrsUL + linethrsBR + linethrsAR)
 
 
 # output plots
 with st.beta_container():
-	show_plot(kind="altair")
+	if x == "mg/dL":
+		show_plot(kind="altair")
+	else:
+		show_plot(kind="altair 2")
 
 two_cols = True#st.checkbox("2 columns?", True)
 if two_cols:
@@ -193,9 +222,15 @@ col1, col2 = st.beta_columns(2)
 
 if two_cols:
 	with col1:
-		show_plot(kind="CGM time series")
+		if x == "mg/dL":
+			show_plot(kind="CGM time series")
+		else:
+			show_plot(kind="CGM time series 2")
 	with col2:
-		show_plot(kind="CGM Histogram")
+		if x == "mg/dL":
+			show_plot(kind="CGM Histogram")
+		else:
+			show_plot(kind="CGM Histogram 2")
 	# with col1:
 	# 	show_plot(kind="altair")
 	# with col2:
@@ -217,7 +252,10 @@ with st.beta_container():
 	# if st.checkbox("See stats", True):
 	# 	st.json(a.statDict)
 	with st.beta_expander("See Stats"):
-		st.json(a.statDict)
+		if x == "mg/dL":
+			st.json(a.statDict)
+		else:
+			st.json(a.statDict2)
 	# show_data = st.checkbox("See the raw data?")
 	with st.beta_expander("See raw data"):
 		st.dataframe(a.df)
@@ -231,7 +269,9 @@ with st.beta_container():
 
 		- GMI (%) = 3.31 + 0.02392 × [mean glucose in mg/dL] or GMI (mmol/mol) = 12.71 + 4.70587 × [mean glucose in mmol/L]
 
-		- For hypoglycemic risk see Refs. (1) Kovatchev, B, et al. Algorithmic Evaluation of Metabolic Control and Risk of Severe Hypoglycemia in Type 1 and Type 2 Diabetes Using Self-Monitoring Blood Glucose Data. Diabetes Technology and Therapeutics, 5(5): 817-828, 2003. (2) Clarke W, Kovatchev B. Statistical Tools to Analyze Continuous Glucose Monitor Data. Diabetes Technology & Therapeutics. 2009; 11(Suppl 1): S-45-S-54. doi:10.1089/dia.2008.0138. PubMed Link
+		- For hypoglycemic risk see Refs. (1) Kovatchev, B, et al. Algorithmic Evaluation of Metabolic Control and Risk of Severe Hypoglycemia in Type 1 and Type 2 Diabetes Using Self-Monitoring Blood Glucose Data. Diabetes Technology and Therapeutics, 5(5): 817-828, 2003. (2) Clarke W, Kovatchev B. Statistical Tools to Analyze Continuous Glucose Monitor Data. Diabetes Technology & Therapeutics. 2009; 11(Suppl 1): S-45-S-54. doi:10.1089/dia.2008.0138.
+
+		- Some bugs on the synch part.
 
 		Made by [JQTM](https://github.com/jquetzalcoatl).
 
