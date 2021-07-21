@@ -54,7 +54,6 @@ a = stats((jsonObj, df))
 #Dashboard
 # can only set this once, first thing to set
 
-CURRENT_THEME = "light"
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 
@@ -71,6 +70,8 @@ with st.beta_container():
 # 	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
 
 with st.sidebar:
+	x = st.select_slider("Select units:", ["mg/dL", "mmol/L"])
+	st.write(x)
 	with st.beta_expander("Choose Patient"):
 		chart_type = st.selectbox("", np.unique(a.Pts).tolist())
 
@@ -223,6 +224,10 @@ with st.beta_container():
 	st.write(
 		"""
 		- This app uses [Streamlit](https://streamlit.io/).
+
+		- GMI (%) = 3.31 + 0.02392 × [mean glucose in mg/dL] or GMI (mmol/mol) = 12.71 + 4.70587 × [mean glucose in mmol/L]
+
+		- For hypoglycemic risk see Refs. (1) Kovatchev, B, et al. Algorithmic Evaluation of Metabolic Control and Risk of Severe Hypoglycemia in Type 1 and Type 2 Diabetes Using Self-Monitoring Blood Glucose Data. Diabetes Technology and Therapeutics, 5(5): 817-828, 2003. (2) Clarke W, Kovatchev B. Statistical Tools to Analyze Continuous Glucose Monitor Data. Diabetes Technology & Therapeutics. 2009; 11(Suppl 1): S-45-S-54. doi:10.1089/dia.2008.0138. PubMed Link
 
 		Made by [JQTM](https://github.com/jquetzalcoatl).
 
