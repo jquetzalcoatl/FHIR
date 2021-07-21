@@ -110,14 +110,14 @@ thrsUL=54 * alpha
 thrsBR=72 * alpha
 thrsAR=198 * alpha
 # a.getStats(thrsUL=55, thrsBR=80, thrsAR=200)
-
+int(18.0*2)
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
 	with st.beta_expander("Set thresholds"):
-		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 396 * alpha, value=54 * alpha)
-		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 396 * alpha, value=thrsUL+18 * alpha)
-		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 396 * alpha, value=thrsBR+126 * alpha)
+		thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = int(396 * alpha), value=int(54 * alpha))
+		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = int(396 * alpha), value=int(thrsUL+18 * alpha))
+		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = int(396 * alpha), value=int(thrsBR+126 * alpha))
 
 with st.beta_container():
 	# show_params = st.checkbox("Set thresholds", False)
