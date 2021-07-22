@@ -34,7 +34,7 @@ except SystemExit as e:
 # a = stats(date="2021-06-15", MAX=5)
 
 path = os.getcwd() + "/TS-BulkExport-" + args.date
-# path = os.getcwd() + "/TS-BulkExport-" + "2021-07-05"
+# path = os.getcwd() + "/TS-BulkExport-" + "2021-07-21"
 
 #LOADING
 import json
@@ -46,7 +46,8 @@ def loadJSON(filename = path + "/Observations.json"):
 jsonObj = loadJSON()
 
 df = pd.read_csv(path + "/Observations.csv")
-
+# a.df2
+# a.reducedDF
 a = stats((jsonObj, df))
 # a.df
 ###
@@ -100,12 +101,12 @@ with st.beta_container():
 	hour_selected0 = (a.getDate(str(a.reducedDF['Dates'].iloc[0])), a.getDate(str(a.reducedDF['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
 
-# row1_1, row1_2 = st.beta_columns((2,2))
-# with row1_1:
-# 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-#
-# with row1_2:
-# 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
+row1_1, row1_2 = st.beta_columns((2,2))
+with row1_1:
+	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
+
+with row1_2:
+	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
 
 a.getWindow2(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
 thrsUL=54
@@ -132,7 +133,6 @@ with st.beta_container():
 
 a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
 
-# sns.lineplot(data=a.reducedDF.iloc[:,1:2], palette=['blue'], linewidth=2.5, hue="red", style="red", c='red')
 def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 	if x < thrsUL:
 		return 'red'
@@ -143,7 +143,7 @@ def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 	else:
 		return 'red'
 
-# sns.histplot(a.reducedDF['CGM'], kde=True, color='red', bins=10)
+
 # create plots
 def show_plot(kind: str):
 	st.write(kind)
@@ -192,7 +192,7 @@ def show_plot(kind: str):
 		st.pyplot(fig)
 	elif kind == "altair":
 		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
-		c = alt.Chart(a.reducedDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
+		c = alt.Chart(a.reducedDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM': [thrsUL]})).mark_rule().encode(y='CGM')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM': [thrsBR]})).mark_rule().encode(y='CGM')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
@@ -205,7 +205,16 @@ def show_plot(kind: str):
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsBR]})).mark_rule().encode(y='CGM (mmol/L)')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsAR]})).mark_rule().encode(y='CGM (mmol/L)')
 		st.write(c + linethrsUL + linethrsBR + linethrsAR)
+	elif kind == "aggregated":
+		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
+		c = alt.Chart(a.df2).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Color('Patients', legend=None, scale=alt.Scale(domain=np.unique(a.Pts).tolist(),type='ordinal')), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
 
+		labels = alt.Chart(a.df2).mark_text(align='left', dx=3, fontSize=15).encode(alt.X('Dates', aggregate='max', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', aggregate={'argmax': 'Dates'}, scale=alt.Scale(zero=False)), alt.Text('Patients'), alt.Color('Patients', legend=None, scale=alt.Scale(domain=np.unique(a.Pts).tolist(),type='ordinal')))
+
+		linethrsUL = alt.Chart(pd.DataFrame({'CGM': [thrsUL]})).mark_rule().encode(y='CGM')
+		linethrsBR = alt.Chart(pd.DataFrame({'CGM': [thrsBR]})).mark_rule().encode(y='CGM')
+		linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
+		st.write(c + labels + linethrsUL + linethrsBR + linethrsAR)
 
 # output plots
 with st.beta_container():
@@ -223,14 +232,14 @@ col1, col2 = st.beta_columns(2)
 if two_cols:
 	with col1:
 		if x == "mg/dL":
-			show_plot(kind="CGM time series")
-		else:
-			show_plot(kind="CGM time series 2")
-	with col2:
-		if x == "mg/dL":
 			show_plot(kind="CGM Histogram")
 		else:
 			show_plot(kind="CGM Histogram 2")
+	with col2:
+		if x == "mg/dL":
+			st.json(a.statDict)
+		else:
+			st.json(a.statDict2)
 	# with col1:
 	# 	show_plot(kind="altair")
 	# with col2:
@@ -251,14 +260,21 @@ with st.beta_container():
 	# show_stats = st.checkbox("See stats", True)
 	# if st.checkbox("See stats", True):
 	# 	st.json(a.statDict)
-	with st.beta_expander("See Stats"):
-		if x == "mg/dL":
-			st.json(a.statDict)
-		else:
-			st.json(a.statDict2)
+	# with st.beta_expander("See Stats"):
+		# if x == "mg/dL":
+		# 	st.json(a.statDict)
+		# else:
+		# 	st.json(a.statDict2)
 	# show_data = st.checkbox("See the raw data?")
 	with st.beta_expander("See raw data"):
 		st.dataframe(a.df)
+
+	with st.beta_expander("More stuff"):
+		if x == "mg/dL":
+			show_plot(kind="CGM time series")
+		else:
+			show_plot(kind="CGM time series 2")
+		show_plot(kind="aggregated")
 	# if st.checkbox("See the raw data?"):
 	# 	st.dataframe(a.df)
 	# notes
