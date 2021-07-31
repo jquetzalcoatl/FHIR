@@ -28,7 +28,8 @@ import json
 class dataQuery(object):
 	def __init__(self, date='2021-07-28', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
 		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
-		self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
+		# self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
+		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observation.csv'))
 		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
 		self.createPtDF()
 
