@@ -82,7 +82,7 @@ with st.beta_container():
 # row1_1, row1_2 = st.beta_columns((2,2))
 # with row1_1:
 # 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-# 
+#
 # with row1_2:
 # 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
 
@@ -178,7 +178,7 @@ def show_plot(kind: str):
 		st.pyplot(fig)
 	elif kind == "altair":
 		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c']) mark_area
-		c = alt.Chart(a.reducedDF).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
+		c = alt.Chart(a.reducedDF).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM': [thrsUL]})).mark_rule().encode(y='CGM')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM': [thrsBR]})).mark_rule().encode(y='CGM')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
