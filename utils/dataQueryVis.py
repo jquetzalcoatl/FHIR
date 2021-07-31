@@ -1,31 +1,49 @@
-from utils.observations import ObsDF
 from utils.BGriskAssesment import BGRiskAssesment
 import pandas as pd
 import os
 from datetime import datetime
 import numpy as np
+import json
 
-class stats(ObsDF):
-	def __init__(self, obs=0, date = "2021-05-29", MAX=3, ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		if obs == 0:
-			super(stats, self).__init__(date = date, MAX=MAX)
-			self.Obs = self.resources["Observation"]
-		else:
-			self.Obs = obs[0]
-			self.df = obs[1]
+# os.getcwd()
+# os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
-		self.getDates()
-		self.getCGM()
-		self.getPatients()
-		self.sortData()
-		self.createTable()
+# b = dataQuery()
+# b.aggDict['PathToCSV']
+# ag = b.loadJSON(os.path.join(os.getcwd(), 'Aggregate-2021-07-28'), 'AggDataDict.json')
+# ag.keys()
+# b.aggDict['Patients']
+# len(b.ObsDF['CGM'])
+# b.PtDF.keys()
+# b.PtDF['Patient/325498']['CGM']
+# b.ObsDF
+# b.reducedDF
+# b.getDate(str(b.ObsDF['Dates']))
+# b.ObsDF['Dates'].apply(lambda x : b.getDate(str(x)))
+# b.reducedDF
+# b.getDate(str(b.reducedDF['Dates'].iloc[0]))
+# b.ObsDF
+# b.ObsDF.apply(lambda x : b.getDate(str(x['Dates'])), axis=1)
 
-		self.getWindow(ptId, dateStart, dateEnd)
+class dataQuery(object):
+	def __init__(self, date='2021-07-28', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
+		self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
+		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
+		self.createPtDF()
+
 		self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
-		self.getStats(thrsUL, thrsBR, thrsAR)
 
-		if obs == 0:
-			self.saveJSON(self.statDict, f'statDict.json')
+	def saveJSON(self, obj, path, filename='FHIRdata.json'):
+		dictJSON = json.dumps(obj)
+		f = open(os.path.join(path, filename),"w")
+		f.write(dictJSON)
+		f.close()
+
+	def loadJSON(self, path, file):
+		with open(os.path.join(path, file), 'r') as h:
+			js = json.load(h)
+		return js
 
 	def getDate(self, x):
 			try:
@@ -33,61 +51,60 @@ class stats(ObsDF):
 			except:
 				return datetime.fromisoformat(x[:])
 
-	def getDates(self):
-		self.dates = [self.getDate(self.Obs[i]['effectiveDateTime']) for i in range(len(self.Obs)) ]
+	def createPtDF(self):
+		self.PtDF = {}
+		for pt in self.aggDict['Patients']:
+			self.PtDF[pt] = self.getWindow(ptId=pt)
 
-	def getCGM(self):
-		self.CGM = [self.Obs[i]['valueQuantity']['value'] for i in range(len(self.Obs)) ]
-		self.CGM2 = [self.Obs[i]['valueQuantity']['value']/18 for i in range(len(self.Obs)) ]
-
-	def getPatients(self):
-		self.Pts = [self.Obs[i]['subject']['reference'] for i in range(len(self.Obs)) ]
-
-	def sortData(self):
-		idx = np.argsort(self.dates)
-		self.dates = [self.dates[i] for i in idx]
-		self.CGM = [self.CGM[i] for i in idx]
-		self.Pts = [self.Pts[i] for i in idx]
-		self.CGM2 = [self.CGM2[i] for i in idx]
-
-	def createTable(self):
-		self.df2 = pd.DataFrame(index=range(len(self.CGM)), columns=['Patients', 'CGM', 'Dates'])
-		self.df2['Patients'] = self.Pts
-		self.df2['CGM'] = self.CGM
-		self.df2['Dates'] = self.dates
-		self.df2['CGM (mmol/L)'] = self.CGM2
 
 	def getWindow(self, ptId=0, dateStart=0, dateEnd=0):
 		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q1 = self.df2['Patients'] == ptId
+			q1 = self.ObsDF['Patients'] == ptId
 		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q2 = self.df2['Dates'] >= self.getDate(dateStart)
+			q2 = self.ObsDF['Dates'] >= self.getDate(dateStart)
 		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q3 = self.df2['Dates'] <= self.getDate(dateEnd)
+			q3 = self.ObsDF['Dates'] <= self.getDate(dateEnd)
 
-		self.reducedDF = self.df2[q1 & q2 & q3]
+		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+		return self.ObsDF[q1 & q2 & q3]
 
 	def getWindow2(self, ptId=0, dateStart=0, dateEnd=0):
 		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q1 = self.df2['Patients'] == ptId
+			q1 = self.ObsDF['Patients'] == ptId
 		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q2 = self.df2['Dates'] >= dateStart
+			q2 = self.ObsDF['Dates'] >= dateStart
 		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
 		else:
-			q3 = self.df2['Dates'] <= dateEnd
+			q3 = self.ObsDF['Dates'] <= dateEnd
 
-		self.reducedDF = self.df2[q1 & q2 & q3]
+		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+
+	def getWindow3(self, ptId=0, dateStart=0, dateEnd=0):
+		if ptId == 'All':
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+		else:
+			q1 = self.ObsDF['Patients'] == ptId
+		if dateStart == 0:
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+		else:
+			q2 = self.ObsDF['Dates'].apply(lambda x : self.getDate(str(x))) >= dateStart
+		if dateEnd == 0:
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+		else:
+			q3 = self.ObsDF['Dates'].apply(lambda x : self.getDate(str(x))) <= dateEnd
+
+		self.reducedDF = self.ObsDF[q1 & q2 & q3]
 
 	def getStats(self, thrsUL=55, thrsBR=80, thrsAR=200):
 		self.statDict ={
@@ -102,11 +119,11 @@ class stats(ObsDF):
 			'q25' : str(np.percentile(self.reducedDF['CGM'], 25)),
 			'q50' : str(np.percentile(self.reducedDF['CGM'], 50)),
 			'q75' : str(np.percentile(self.reducedDF['CGM'], 75)),
-			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/60 * 1/5 + 1 ),2)),
+			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( ( self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ),2)),
 			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
 			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
 			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
-			'nDays' : str(int(np.floor( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/3600 * 1/24 + 1 ))),
+			'nDays' : str(int(np.floor( (self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/3600 * 1/24 + 1 ))),
 			'nValues' : str(len(self.reducedDF['CGM'])),
 			'nUrgentLow' : str(sum(self.reducedDF['CGM'] < thrsUL)),
 			'nBelowRange' : str(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))),
@@ -131,11 +148,11 @@ class stats(ObsDF):
 			'q25' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 25),3)),
 			'q50' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 50),3)),
 			'q75' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 75),3)),
-			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/60 * 1/5 + 1 ),2)),
+			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( ( self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ),2)),
 			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
 			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
 			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
-			'nDays' : str(int(np.floor( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/3600 * 1/24 + 1 ))),
+			'nDays' : str(int(np.floor( (self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/3600 * 1/24 + 1 ))),
 			'nValues' : str(len(self.reducedDF['CGM'])),
 			'nUrgentLow' : str(sum(self.reducedDF['CGM'] < thrsUL)),
 			'nBelowRange' : str(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))),
@@ -149,10 +166,5 @@ class stats(ObsDF):
 			'GMI' : str(round(np.mean(self.reducedDF['CGM']) * 0.02392 + 3.31, 3)),
 			}
 
-	def statDataframeFunc(self):
-		self.statDataframe = pd.DataFrame(columns=list(self.statDict.keys()))
-
 if __name__ == '__main__':
-    stats("2021-06-01")
-
-# GMI (%) = 3.31 + 0.02392 × [mean glucose in mg/dL] or GMI (mmol/mol) = 12.71 + 4.70587 × [mean glucose in mmol/L].
+	dataQuery(date='2021-07-28')

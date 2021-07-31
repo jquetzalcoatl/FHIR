@@ -8,18 +8,19 @@ class BGRiskAssesment(object):
 	'''
 	def __init__(self, cgm):
 		self.cgm = cgm
-		self.f = lambda x : 1.509 * ((np.log(x))**1.084 - 5.381) # if in mg/dL
+		# self.f = lambda x : 1.509 * ((np.log(x))**1.084 - 5.381) # if in mg/dL
+		self.f = lambda x : 1.509 * ( np.real(np.power(np.log(x + 0.0001), 1.084, dtype=np.complex128)) - 5.381)
 		# f(BG, c::Bool) = 1.509 * (log(18 * BG)^1.084 - 5.381) # if in mmol/L
 		self.r = lambda x : 10 * (x)**2
-		self.LBGI = np.mean([self.r(min(self.f(self.cgm[i]),0)) for i in range(len(self.cgm))])
-		self.HBGI = np.mean([self.r(max(self.f(self.cgm[i]),0)) for i in range(len(self.cgm))])
+		self.LBGI = np.mean([self.r(min(self.f(self.cgm.iloc[i]),0)) for i in range(len(self.cgm))])
+		self.HBGI = np.mean([self.r(max(self.f(self.cgm.iloc[i]),0)) for i in range(len(self.cgm))])
 	def LBGRisk(self):
 
 		if self.LBGI <= 1.1:
-			return "Minimal risk for hypoglycemia"
+			return "Minimal"
 		elif 1.1 < self.LBGI <=2.5:
-			return "Low risk for hypoglycemia"
+			return "Low"
 		elif 2.5 < self.LBGI <= 5:
-			return "Moderate risk for hypoglycemia"
-		elif 5.0 > self.LBGI:
-			return "High risk"
+			return "Moderate"
+		elif self.LBGI > 5.0:
+			return "High"

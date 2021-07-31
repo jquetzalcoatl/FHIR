@@ -1,0 +1,25 @@
+.highlight {
+  border-radius: 0.3rem;
+  color: white;
+  padding: 0.45rem;
+  margin-bottom: 2rem;
+}
+.bold {
+  padding-left: 0rem;
+  font-weight: 700;
+}
+.blue {
+  background-color: dodgerblue;
+}
+.red {
+  background-color: lightcoral;
+}
+.purple {
+  background-color: purple;
+}
+.a {
+  font-size: 13px;
+}
+.b {
+  line-height: 2.6;
+}

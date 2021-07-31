@@ -6,15 +6,17 @@ from matplotlib.figure import Figure
 from datetime import datetime, date
 import seaborn as sns
 import altair as alt
-from utils.stats import stats
+from utils.dataQueryVis import dataQuery
 import argparse
 import os
+from utils.load_css import local_css, textFunc, statsTextFunc
+
 
 ####
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
-# $streamlit run visualization.py -- --date 2021-07-06
+# $streamlit run visV2.py -- --date 2021-07-06
 # https://github.com/streamlit/streamlit/issues/337#issuecomment-544860528
 
 #PARSING
@@ -31,44 +33,20 @@ except SystemExit as e:
     # so we have to do a hard exit.
     os._exit(e.code)
 
-# a = stats(date="2021-06-15", MAX=5)
 
-path = os.getcwd() + "/TS-BulkExport-" + args.date
-# path = os.getcwd() + "/TS-BulkExport-" + "2021-07-21"
+a = dataQuery()
+a.aggDict['Patients'].append('All')
 
-#LOADING
-import json
-def loadJSON(filename = path + "/Observations.json"):
-	with open(filename, 'r') as h:
-		js = json.load(h)
-	return js
-
-jsonObj = loadJSON()
-
-df = pd.read_csv(path + "/Observations.csv")
-# a.df2
-# a.reducedDF
-a = stats((jsonObj, df))
-# a.df
-###
-# a.Obs[0]
 #Dashboard
 # can only set this once, first thing to set
-# a.reducedDF
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
-
+local_css("./utils/style.css")
+tt = 2
 with st.beta_container():
-	st.title("TS Data Visualization Demo")
-	st.header(f'Showing dummy data! from bulk export ({args.date})')
-	# st.write("""See the code and plots for five libraries at once.""")
+	st.title("TS-Registry Visualization Tool")
+	st.header(f'(Showing dummy data!)')
 
-# LAYING OUT THE TOP SECTION OF THE APP
-# row1_1, row1_2 = st.beta_columns((2,2))
-# np.max(a.dates)
-# with row1_1:
-# 	st.title("Patient")
-# 	chart_type = st.selectbox("Choose Patient", np.unique(a.Pts).tolist())
 alpha = 1.0
 with st.sidebar:
 	x = st.radio("Select units:", ("mg/dL", "mmol/L"))
@@ -76,7 +54,7 @@ with st.sidebar:
 		st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
 	# st.write(x)
 	with st.beta_expander("Choose Patient"):
-		chart_type = st.selectbox("", np.unique(a.Pts).tolist())
+		chart_type = st.selectbox("", a.aggDict['Patients'])
 if x == "mmol/L":
 	alpha = 1.0/18.0
 elif x == "mg/dL":
@@ -101,14 +79,14 @@ with st.beta_container():
 	hour_selected0 = (a.getDate(str(a.reducedDF['Dates'].iloc[0])), a.getDate(str(a.reducedDF['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
 
-# row1_1, row1_2 = st.beta_columns((2,2))
-# with row1_1:
-# 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-#
-# with row1_2:
-# 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
+row1_1, row1_2 = st.beta_columns((2,2))
+with row1_1:
+	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
 
-a.getWindow2(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
+with row1_2:
+	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
+
+a.getWindow3(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
 thrsUL=54
 thrsBR=72
 thrsAR=198
@@ -121,7 +99,7 @@ with st.sidebar:
 		thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
-
+a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
 with st.beta_container():
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
@@ -131,7 +109,15 @@ with st.beta_container():
 	st.subheader(f"Displaying:  {chart_type}")
 	st.write("")
 
-a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
+	# st.markdown(textFunc("mean",a.statDict["mean"]), unsafe_allow_html=True)
+	# st.button("Here")
+	if x == "mg/dL":
+		# st.write(a.statDict)
+		st.markdown(statsTextFunc(a.statDict), unsafe_allow_html=True)
+	else:
+		st.markdown(statsTextFunc(a.statDict2), unsafe_allow_html=True)
+
+
 
 def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 	if x < thrsUL:
@@ -149,7 +135,7 @@ def show_plot(kind: str):
 	st.write(kind)
 	if kind == "CGM time series":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(a.dates, rotation=45)
+		ax.set_xticklabels(a.reducedDF['Dates'], rotation=45)
 		ax.set_xlabel("Date")
 		ax.set_ylabel(f'CGM ({x})')
 		ll = a.reducedDF.shape[0]
@@ -158,7 +144,7 @@ def show_plot(kind: str):
 		st.pyplot(fig)
 	elif kind == "CGM time series 2":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(a.dates, rotation=45)
+		ax.set_xticklabels(a.reducedDF['Dates'], rotation=45)
 		ax.set_xlabel("Date")
 		ax.set_ylabel(f'CGM ({x})')
 		ll = a.reducedDF.shape[0]
@@ -170,7 +156,7 @@ def show_plot(kind: str):
 		# ax.set_xticklabels(a.CGM, rotation=0)
 		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(a.reducedDF['CGM'], ax=ax, kde=True, bins=b)
+		sns.histplot(a.reducedDF['CGM'], ax=ax, kde=True, bins=b, stat="density", element="step")
 		# sns.displot(a.reducedDF['CGM'], ax=ax)
 		st.pyplot(fig)
 	elif kind == "CGM Histogram 2":
@@ -178,7 +164,7 @@ def show_plot(kind: str):
 		# ax.set_xticklabels(a.reducedDF['CGM (mmol/L)'], rotation=0)
 		# ax.hist(a.reducedDF['CGM'], normed=1)#matplotlib_plot(chart_type, df)
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(a.reducedDF['CGM (mmol/L)'], ax=ax, kde=True, bins=b)
+		sns.histplot(a.reducedDF['CGM (mmol/L)'], ax=ax, kde=True, bins=b, stat="density", element="step")
 		# sns.displot(a.reducedDF['CGM'], ax=ax)
 		st.pyplot(fig)
 	elif kind == "Matplotlib":
@@ -191,8 +177,8 @@ def show_plot(kind: str):
 		# st.plotly_chart(plot, use_container_width=True)
 		st.pyplot(fig)
 	elif kind == "altair":
-		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
-		c = alt.Chart(a.reducedDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
+		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c']) mark_area
+		c = alt.Chart(a.reducedDF).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM': [thrsUL]})).mark_rule().encode(y='CGM')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM': [thrsBR]})).mark_rule().encode(y='CGM')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
@@ -207,9 +193,9 @@ def show_plot(kind: str):
 		st.write(c + linethrsUL + linethrsBR + linethrsAR)
 	elif kind == "aggregated":
 		# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
-		c = alt.Chart(a.df2).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Color('Patients', legend=None, scale=alt.Scale(domain=np.unique(a.Pts).tolist(),type='ordinal')), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
+		c = alt.Chart(a.ObsDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Color('Patients', legend=None, scale=alt.Scale(domain=a.aggDict['Patients'],type='ordinal')), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
 
-		labels = alt.Chart(a.df2).mark_text(align='left', dx=3, fontSize=15).encode(alt.X('Dates', aggregate='max', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', aggregate={'argmax': 'Dates'}, scale=alt.Scale(zero=False)), alt.Text('Patients'), alt.Color('Patients', legend=None, scale=alt.Scale(domain=np.unique(a.Pts).tolist(),type='ordinal')))
+		labels = alt.Chart(a.ObsDF).mark_text(align='left', dx=3, fontSize=15).encode(alt.X('Dates', aggregate='max', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', aggregate={'argmax': 'Dates'}, scale=alt.Scale(zero=False)), alt.Text('Patients'), alt.Color('Patients', legend=None, scale=alt.Scale(domain=a.aggDict['Patients'],type='ordinal')))
 
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM': [thrsUL]})).mark_rule().encode(y='CGM')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM': [thrsBR]})).mark_rule().encode(y='CGM')
@@ -218,56 +204,53 @@ def show_plot(kind: str):
 
 # output plots
 with st.beta_container():
+	# st.text_area("Hello")
 	if x == "mg/dL":
 		show_plot(kind="altair")
+		show_plot(kind="CGM Histogram")
 	else:
 		show_plot(kind="altair 2")
+		show_plot(kind="CGM Histogram 2")
 
-two_cols = True#st.checkbox("2 columns?", True)
-if two_cols:
-	col1, col2 = st.beta_columns(2)
+# two_cols = True#st.checkbox("2 columns?", True)
+# if two_cols:
+# 	col1, col2 = st.beta_columns(2)
+#
+# col1, col2 = st.beta_columns(2)
 
-col1, col2 = st.beta_columns(2)
-
-if two_cols:
-	with col1:
-		if x == "mg/dL":
-			show_plot(kind="CGM Histogram")
-		else:
-			show_plot(kind="CGM Histogram 2")
-	with col2:
-		if x == "mg/dL":
-			st.json(a.statDict)
-		else:
-			st.json(a.statDict2)
-	# with col1:
-	# 	show_plot(kind="altair")
-	# with col2:
-	# 	show_plot(kind="Matplotlib")
-	# with col1:
-	# 	show_plot(kind="Matplotlib")
-	# with col2:
-	# 	show_plot(kind="Matplotlib")
-else:
-	with st.beta_container():
-		for lib in libs:
-			show_plot(kind=lib)
+# if two_cols:
+# 	with col1:
+# 		if x == "mg/dL":
+# 			show_plot(kind="CGM Histogram")
+# 		else:
+# 			show_plot(kind="CGM Histogram 2")
+# 	with col2:
+# 		if x == "mg/dL":
+# 			st.write(a.statDict)
+# 		else:
+# 			st.json(a.statDict2)
+# 	# with col1:
+# 	# 	show_plot(kind="altair")
+# 	# with col2:
+# 	# 	show_plot(kind="Matplotlib")
+# 	# with col1:
+# 	# 	show_plot(kind="Matplotlib")
+# 	# with col2:
+# 	# 	show_plot(kind="Matplotlib")
+# else:
+# 	with st.beta_container():
+# 		for lib in libs:
+# 			show_plot(kind=lib)
 
 # display data
 with st.beta_container():
-	# show_plot(kind="altair")
-	# show_plot(kind="CGM time series")
-	# show_stats = st.checkbox("See stats", True)
-	# if st.checkbox("See stats", True):
-	# 	st.json(a.statDict)
-	# with st.beta_expander("See Stats"):
-		# if x == "mg/dL":
-		# 	st.json(a.statDict)
-		# else:
-		# 	st.json(a.statDict2)
-	# show_data = st.checkbox("See the raw data?")
+	with st.beta_expander("See stats"):
+		if x == "mg/dL":
+			st.write(a.statDict)
+		else:
+			st.json(a.statDict2)
 	with st.beta_expander("See raw data"):
-		st.dataframe(a.df)
+		st.dataframe(a.ObsDF)
 
 	with st.beta_expander("More stuff"):
 		if x == "mg/dL":
