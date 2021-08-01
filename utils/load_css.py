@@ -21,9 +21,9 @@ def statsTextFunc(args):
     <span class='highlight blue'><span class='a'>%Below&nbsp;Range::&nbsp;</span><span class='bold'>{args['PerBelowRange']}</span></span>&emsp;&emsp;&emsp; \
     <span class='highlight blue'><span class='a'>%In&nbsp;Range::&nbsp;</span><span class='bold'>{args['PerInRange']}</span></span>&emsp; &emsp; &emsp; \
     <span class='highlight blue'><span class='a'>%Above&nbsp;Range::&nbsp;</span><span class='bold'>{args['PerAboveRange']}</span></span>&emsp; &emsp; &emsp;\
-    <span class='highlight blue'><span class='a'>Coeff&nbsp;Variation::&nbsp;</span><span class='bold'>{args['CoeffVariation']}</span> </span> &emsp; &emsp; &emsp; \
-    <span class='highlight blue'><span class='a'>%Utilization::&nbsp;</span><span class='bold'>{args['utilizationPerc']}</span> </span> &emsp; &emsp; &emsp; \
-    <span class='highlight blue'><span class='a'>Hypoglycemic&nbsp;Risk::&nbsp;</span><span class='bold'>{args['hypoRisk']}</span> </span> &emsp; &emsp; &emsp; \
-    <span class='highlight blue'><span class='a'>Low&nbsp;BG&nbsp;Index::&nbsp;</span><span class='bold'>{args['LowBGIndex']}</span> </span> &emsp; &emsp; &emsp; \
-    <span class='highlight blue'><span class='a'>High&nbsp;BG&nbsp;Index::&nbsp;</span><span class='bold'>{args['HighBGIndex']}</span> </span> &emsp; &emsp; &emsp; \
+    <span class='highlight blue'><span class='a'>Coeff&nbsp;Variation::&nbsp;</span><span class='bold'>{args['CoeffVariation']}</span></span> &emsp; &emsp; &emsp; \
+    <span class='highlight blue'><span class='a'>%Utilization::&nbsp;</span><span class='bold'>{args['utilizationPerc']}</span></span> &emsp; &emsp; &emsp; \
+    <span class='highlight blue'><span class='a'>Hypoglycemic&nbsp;Risk::&nbsp;</span><span class='bold'>{args['hypoRisk']}</span></span> &emsp; &emsp; &emsp; \
+    <span class='highlight blue'><span class='a'>Low&nbsp;BG&nbsp;Index::&nbsp;</span><span class='bold'>{args['LowBGIndex']}</span></span> &emsp; &emsp; &emsp; \
+    <span class='highlight blue'><span class='a'>High&nbsp;BG&nbsp;Index::&nbsp;</span><span class='bold'>{args['HighBGIndex']}</span></span> &emsp; &emsp; &emsp; \
     </span>  </div>"
