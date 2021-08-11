@@ -5,25 +5,25 @@ from datetime import datetime
 import numpy as np
 import json
 
-os.getcwd()
-os.chdir(os.path.join(os.getcwd(), "FHIR"))
-
-b = dataQuery()
-b.aggDict['PathToCSV']
-# ag = b.loadJSON(os.path.join(os.getcwd(), 'Aggregate-2021-07-28'), 'AggDataDict.json')
-# ag.keys()
-b.aggDict['Patients']
-b.aggDict['Codes'].keys()
-b.ObsDF[b.ObsDF['root-subject-reference'] == b.aggDict['Patients'][0]]
-b.ObsDF[b.ObsDF['root-id'].isin(b.aggDict['Codes']['304541006']['IDs'])]['root-subject-reference'] == b.aggDict['Patients'][0]
-len(b.aggDict['ObsIDs'])
-b.aggDict['Codes']['304541006']['IDs'][0]
-b.dataDict.keys()
-b.PtDF.keys()
-np.unique(b.PtDF['Patient/325498']['root-code-coding-coding_0-code'])
-b.ObsDF.apply(lambda x : b.getDate(str(x['root-effectiveDateTime'])), axis=1)
-b.PtDF['Patient/325498']['846663002']
-b.PtDF['Patient/325498']['root-code-coding-coding_0-code']
+# os.getcwd()
+# os.chdir(os.path.join(os.getcwd(), "FHIR"))
+#
+# b = dataQuery()
+# b.aggDict['PathToCSV']
+# # ag = b.loadJSON(os.path.join(os.getcwd(), 'Aggregate-2021-07-28'), 'AggDataDict.json')
+# # ag.keys()
+# b.aggDict['Patients']
+# b.aggDict['Codes'].keys()
+# b.ObsDF[b.ObsDF['root-subject-reference'] == b.aggDict['Patients'][0]]
+# b.ObsDF[b.ObsDF['root-id'].isin(b.aggDict['Codes']['304541006']['IDs'])]['root-subject-reference'] == b.aggDict['Patients'][0]
+# len(b.aggDict['ObsIDs'])
+# b.aggDict['Codes']['304541006']['IDs'][0]
+# b.dataDict.keys()
+# b.PtDF.keys()
+# np.unique(b.PtDF['Patient/325498']['root-code-coding-coding_0-code'])
+# b.ObsDF.apply(lambda x : b.getDate(str(x['root-effectiveDateTime'])), axis=1)
+# b.PtDF['Patient/325498']['846663002']
+# b.PtDF['Patient/325498']['root-code-coding-coding_0-code']
 
 # len(b.ObsDF['CGM'])
 # b.PtDF.keys()
