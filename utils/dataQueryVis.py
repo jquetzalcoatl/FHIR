@@ -5,14 +5,26 @@ from datetime import datetime
 import numpy as np
 import json
 
-# os.getcwd()
-# os.chdir(os.path.join(os.getcwd(), "FHIR"))
+os.getcwd()
+os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
-# b = dataQuery()
-# b.aggDict['PathToCSV']
+b = dataQuery()
+b.aggDict['PathToCSV']
 # ag = b.loadJSON(os.path.join(os.getcwd(), 'Aggregate-2021-07-28'), 'AggDataDict.json')
 # ag.keys()
-# b.aggDict['Patients']
+b.aggDict['Patients']
+b.aggDict['Codes'].keys()
+b.ObsDF[b.ObsDF['root-subject-reference'] == b.aggDict['Patients'][0]]
+b.ObsDF[b.ObsDF['root-id'].isin(b.aggDict['Codes']['304541006']['IDs'])]['root-subject-reference'] == b.aggDict['Patients'][0]
+len(b.aggDict['ObsIDs'])
+b.aggDict['Codes']['304541006']['IDs'][0]
+b.dataDict.keys()
+b.PtDF.keys()
+np.unique(b.PtDF['Patient/325498']['root-code-coding-coding_0-code'])
+b.ObsDF.apply(lambda x : b.getDate(str(x['root-effectiveDateTime'])), axis=1)
+b.PtDF['Patient/325498']['846663002']
+b.PtDF['Patient/325498']['root-code-coding-coding_0-code']
+
 # len(b.ObsDF['CGM'])
 # b.PtDF.keys()
 # b.PtDF['Patient/325498']['CGM']
@@ -26,14 +38,16 @@ import json
 # b.ObsDF.apply(lambda x : b.getDate(str(x['Dates'])), axis=1)
 
 class dataQuery(object):
-	def __init__(self, date='2021-07-28', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
+	def __init__(self, date='2021-08-06', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'Metadata.json')
 		# self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
-		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observations.csv'))
-		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
+		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observation.csv'))
+		self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'data.json')
+		# self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
+		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['root-effectiveDateTime'])), axis=1)
 		self.createPtDF()
-
-		self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
+		#
+		# self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
 
 	def saveJSON(self, obj, path, filename='FHIRdata.json'):
 		dictJSON = json.dumps(obj)
@@ -55,7 +69,11 @@ class dataQuery(object):
 	def createPtDF(self):
 		self.PtDF = {}
 		for pt in self.aggDict['Patients']:
-			self.PtDF[pt] = self.getWindow(ptId=pt)
+			# self.PtDF[pt] = self.getWindow(ptId=pt)
+			temp = self.ObsDF[self.ObsDF['root-subject-reference'] == pt]
+			codes = np.unique(temp['root-code-coding-coding_0-code']).tolist()
+			for code in codes:
+				self.PtDF[pt] = {code : temp[temp['root-code-coding-coding_0-code'] == code]}
 
 
 	def getWindow(self, ptId=0, dateStart=0, dateEnd=0):
@@ -149,7 +167,7 @@ class dataQuery(object):
 			'q25' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 25),3)),
 			'q50' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 50),3)),
 			'q75' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 75),3)),
-			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( ( self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ),2)),
+			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( ( self.getDate(str(self.reducedDF['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 )*100,2)),
 			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
 			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
 			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
@@ -159,10 +177,10 @@ class dataQuery(object):
 			'nBelowRange' : str(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))),
 			'nInRange' : str(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))),
 			'nAboveRange' : str(sum(self.reducedDF['CGM'] >= thrsAR)),
-			'PerUrgentLow' : str(round(sum(self.reducedDF['CGM'] < thrsUL)/len(self.reducedDF['CGM']),3)),
-			'PerBelowRange' : str(round(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))/len(self.reducedDF['CGM']),3)),
-			'PerInRange' : str(round(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))/len(self.reducedDF['CGM']),3)),
-			'PerAboveRange' : str(round(sum(self.reducedDF['CGM'] >= thrsAR)/len(self.reducedDF['CGM']),3)),
+			'PerUrgentLow' : str(round(sum(self.reducedDF['CGM'] < thrsUL)/len(self.reducedDF['CGM'])*100,3)),
+			'PerBelowRange' : str(round(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))/len(self.reducedDF['CGM'])*100,3)),
+			'PerInRange' : str(round(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))/len(self.reducedDF['CGM'])*100,3)),
+			'PerAboveRange' : str(round(sum(self.reducedDF['CGM'] >= thrsAR)/len(self.reducedDF['CGM'])*100,3)),
 			'CoeffVariation' : str(round(np.std(self.reducedDF['CGM'])/np.mean(self.reducedDF['CGM']),3)),
 			'GMI' : str(round(np.mean(self.reducedDF['CGM']) * 0.02392 + 3.31, 3)),
 			}

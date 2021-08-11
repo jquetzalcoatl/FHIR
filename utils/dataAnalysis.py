@@ -1,5 +1,5 @@
-from utils.observations import ObsDF
-from utils.BGriskAssesment import BGRiskAssesment
+# from utils.observations import ObsDF
+# from utils.BGriskAssesment import BGRiskAssesment
 import pandas as pd
 import os
 from datetime import datetime
@@ -13,40 +13,42 @@ os.chdir(os.path.join(os.getcwd(), "FHIR"))
 b = dataObject()
 b.BEfolderList
 b.typeOfResources
-b.dataDict['Observations'][-1]
-b.ObsDF
-np.unique(b.ObsDF.Patients).tolist()
-b.dataDict['Observations'][0]['id']
-b.dataDict['Patients']
-b.ObsDF[b.ObsDF.apply(lambda x: x['Patients'] == np.unique(b.ObsDF.Patients).tolist()[0], axis=1)]
-b.ObsDF[b.ObsDF['Patients'] == np.unique(b.ObsDF.Patients).tolist()[0]]
-b.ObsDF[b.ObsDF['Patients'] == ]
-df = pd.DataFrame(np.random.randn(5, 3), columns=['a', 'b', 'c'])
+b.dataDict['Observation'][-1]
 
-df.apply(lambda x: x['b'] > x['c'], axis=1)
-df[df.apply(lambda x: x['b'] > x['c'], axis=1)]
+b.resourcesDF.keys()
 
+
+b.dataDict['Observation'][oID[2]]
+b.dataDict['Observation'][oID2[0]]
 
 
 class dataObject(object):
-	def __init__(self, since='2021-07-21', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+	def __init__(self, since='2021-07-29', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
 		self.getDirectories(since=since)
 		self.getResourcesType()
 		self.initDict()
 		self.loadResource()
 		self.dropDuplicates()
 
-		self.getDates()
-		self.getCGM()
-		self.getPatients()
-		self.sortData()
-		self.createTable()
+		# self.getDates()
+		# self.getCGM()
+		# self.getPatients()
+		# self.sortData()
+		# self.createTable()
 
 		self.saveData()
 
-		# self.getWindow(ptId, dateStart, dateEnd)
-		# self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
-		# self.getStats(thrsUL, thrsBR, thrsAR)
+		self.initDFDict()
+		for key in self.dataDict.keys():
+			try:
+				self.createDataFrame(MAX=10, resourceType=key)
+				self.createDataFrame(resourceType=key)
+				self.createDataFrame(resourceType=key)
+			except:
+				pass
+				# self.logging.info(f'Something went wrong when creating the CSV for {key} resource')
+
+		####################################################
 
 	def getDirectories(self, since='2021-07-07'):
 		self.BEfolderList = []
@@ -119,14 +121,14 @@ class dataObject(object):
 				return datetime.fromisoformat(x[:])
 
 	def getDates(self):
-		self.dates = [self.getDate(self.dataDict['Observations'][i]['effectiveDateTime']) for i in range(len(self.dataDict['Observations'])) ]
+		self.dates = [self.getDate(self.dataDict['Observation'][i]['effectiveDateTime']) for i in range(len(self.dataDict['Observation'])) ]
 
 	def getCGM(self):
-		self.CGM = [self.dataDict['Observations'][i]['valueQuantity']['value'] for i in range(len(self.dataDict['Observations'])) ]
-		self.CGM2 = [self.dataDict['Observations'][i]['valueQuantity']['value']/18 for i in range(len(self.dataDict['Observations'])) ]
+		self.CGM = [self.dataDict['Observation'][i]['valueQuantity']['value'] for i in range(len(self.dataDict['Observation'])) ]
+		self.CGM2 = [self.dataDict['Observation'][i]['valueQuantity']['value']/18 for i in range(len(self.dataDict['Observation'])) ]
 
 	def getPatients(self):
-		self.Pts = [self.dataDict['Observations'][i]['subject']['reference'] for i in range(len(self.dataDict['Observations'])) ]
+		self.Pts = [self.dataDict['Observation'][i]['subject']['reference'] for i in range(len(self.dataDict['Observation'])) ]
 
 	def sortData(self):
 		idx = np.argsort(self.dates)
@@ -146,112 +148,112 @@ class dataObject(object):
 		dt = str(datetime.now()).split(' ')[0]
 		os.path.isdir(os.path.join(os.getcwd(), f'Aggregate-{dt}')) or os.mkdir(os.path.join(os.getcwd(), f'Aggregate-{dt}'))
 		#save self.ObsDF
-		path = os.path.join(os.getcwd(), f'Aggregate-{dt}')
-		self.makeAggDict(path)
-		self.ObsDF.to_csv(os.path.join(path, 'Observations.csv'), index=False)
-		self.saveJSON(self.aggDict, path, filename='AggDataDict.json')
+		self.path = os.path.join(os.getcwd(), f'Aggregate-{dt}')
+		self.makeAggDict(self.path)
+		# self.ObsDF.to_csv(os.path.join(path, 'Observation.csv'), index=False)
+		self.saveJSON(self.aggDict, self.path, filename='Metadata.json')
+		self.saveJSON(self.dataDict, self.path, filename='Data.json')
 		#save Dict with b.BEfolderList, self.typeOfResources, patients, IDS, initial date, final date
 
 	def makeAggDict(self, path):
 		self.aggDict = {}
 		self.aggDict['Directories'] = self.BEfolderList
 		self.aggDict['TypeOfResources'] = self.typeOfResources
-		self.aggDict['Patients'] = np.unique(self.ObsDF.Patients).tolist()
-		self.aggDict['ObsIDs'] = [self.dataDict['Observations'][i]['id'] for i in range(len(self.dataDict['Observations']))]
-		self.aggDict['PathToCSV'] = os.path.join(path, 'Observations.csv')
+		self.aggDict['Patients'] = np.unique([self.dataDict['Observation'][i]['subject']['reference'] for i in range(len(self.dataDict['Observation']))]).tolist()#np.unique(self.ObsDF.Patients).tolist()
+		self.aggDict['ObsIDs'] = [self.dataDict['Observation'][i]['id'] for i in range(len(self.dataDict['Observation']))]
+		self.aggDict['Codes'] = self.parseIDs()
+		self.aggDict['PathToCSV'] = os.path.join(path, 'Observation.csv')
 
+	def parseIDs(self):
+		codes = np.unique([self.dataDict['Observation'][i]['code']['coding'][0]['code'] for i in range(len(self.dataDict['Observation']))]).tolist()
+		self.dictCodes={}
+		for code in codes:
+			for i,obs in enumerate(self.dataDict['Observation']):
+				if obs['code']['coding'][0]['code'] == code:
+					self.dictCodes[code] = {'display' : obs['code']['coding'][0]['display'], 'system' : obs['code']['coding'][0]['system'], 'IDs' : []}
+					break
+		for i,obs in enumerate(self.dataDict['Observation']):
+			code = obs['code']['coding'][0]['code']
+			self.dictCodes[code]['IDs'].append(obs['id'])
+		return self.dictCodes
 
-	def getWindow(self, ptId=0, dateStart=0, dateEnd=0):
-		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
+	def createDataFrame(self, resourceType = "Observation", MAX=0):
+		if MAX > 0 and MAX <= len(self.dataDict[resourceType]):
+			limit = MAX
 		else:
-			q1 = self.ObsDF['Patients'] == ptId
-		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
-		else:
-			q2 = self.ObsDF['Dates'] >= self.getDate(dateStart)
-		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
-		else:
-			q3 = self.ObsDF['Dates'] <= self.getDate(dateEnd)
+			limit = len(self.dataDict[resourceType])
+		# for code in self.Codes:
+		# 	for obs in self.dataDict['Observations']
 
-		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+		self.temp = self.JSONToDFRow(self.dataDict[resourceType][0])
+		self.resourcesDF[resourceType] = pd.DataFrame(index=range(limit), columns=self.temp.keys())
+		# self.logging.info(self.resourcesDF[resourceType].shape)
+		for i in range(limit):
+			self.temp = self.JSONToDFRow(self.dataDict[resourceType][i])
+			for key in self.temp:
+				self.resourcesDF[resourceType].iloc[i][key] = self.temp[key]
 
-	def getWindow2(self, ptId=0, dateStart=0, dateEnd=0):
-		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
-		else:
-			q1 = self.ObsDF['Patients'] == ptId
-		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
-		else:
-			q2 = self.ObsDF['Dates'] >= dateStart
-		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.CGM))])[0]
-		else:
-			q3 = self.ObsDF['Dates'] <= dateEnd
+		self.saveDataFrame(resourceType = resourceType)
 
-		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+	def isList(self, d, keyword):
+		if type(d.get(keyword)) == list:
+			keywordUP = keyword.upper()
+			d[keywordUP] = d[keyword]
+			d[keyword] = {}
+			for i, el in enumerate(d[keywordUP]):
+				d[keyword][f'{keyword}_{i}'] = d[keywordUP][i]
+			d.pop(keywordUP, None)
 
-	def getStats(self, thrsUL=55, thrsBR=80, thrsAR=200):
-		self.statDict ={
-			'units' : "mg/dL",
-			'mean' : str(round(np.mean(self.reducedDF['CGM']),3)),
-			'median' : str(np.median(self.reducedDF['CGM'])),
-			'min' : str(np.min(self.reducedDF['CGM'])),
-			'max' : str(np.max(self.reducedDF['CGM'])),
-			'var' : str(round(np.var(self.reducedDF['CGM']),3)),
-			'std' : str(round(np.std(self.reducedDF['CGM']),3)),
-			'sum' : str(np.sum(self.reducedDF['CGM'])),
-			'q25' : str(np.percentile(self.reducedDF['CGM'], 25)),
-			'q50' : str(np.percentile(self.reducedDF['CGM'], 50)),
-			'q75' : str(np.percentile(self.reducedDF['CGM'], 75)),
-			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/60 * 1/5 + 1 ),2)),
-			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
-			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
-			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
-			'nDays' : str(int(np.floor( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/3600 * 1/24 + 1 ))),
-			'nValues' : str(len(self.reducedDF['CGM'])),
-			'nUrgentLow' : str(sum(self.reducedDF['CGM'] < thrsUL)),
-			'nBelowRange' : str(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))),
-			'nInRange' : str(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))),
-			'nAboveRange' : str(sum(self.reducedDF['CGM'] >= thrsAR)),
-			'PerUrgentLow' : str(round(sum(self.reducedDF['CGM'] < thrsUL)/len(self.reducedDF['CGM']),3)),
-			'PerBelowRange' : str(round(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))/len(self.reducedDF['CGM']),3)),
-			'PerInRange' : str(round(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))/len(self.reducedDF['CGM']),3)),
-			'PerAboveRange' : str(round(sum(self.reducedDF['CGM'] >= thrsAR)/len(self.reducedDF['CGM']),3)),
-			'CoeffVariation' : str(round(np.std(self.reducedDF['CGM'])/np.mean(self.reducedDF['CGM']),3)),
-			'GMI' : str(round(np.mean(self.reducedDF['CGM']) * 0.02392 + 3.31, 3)),
-			}
-		self.statDict2 ={
-			'units' : "mmol/L",
-			'mean' : str(round(np.mean(self.reducedDF['CGM (mmol/L)']),3)),
-			'median' : str(round(np.median(self.reducedDF['CGM (mmol/L)']),3)),
-			'min' : str(round(np.min(self.reducedDF['CGM (mmol/L)']),3)),
-			'max' : str(round(np.max(self.reducedDF['CGM (mmol/L)']),3)),
-			'var' : str(round(np.var(self.reducedDF['CGM (mmol/L)']),3)),
-			'std' : str(round(np.std(self.reducedDF['CGM (mmol/L)']),3)),
-			'sum' : str(round(np.sum(self.reducedDF['CGM (mmol/L)']),3)),
-			'q25' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 25),3)),
-			'q50' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 50),3)),
-			'q75' : str(round(np.percentile(self.reducedDF['CGM (mmol/L)'], 75),3)),
-			'utilizationPerc' : str(round(len(self.reducedDF['CGM'])/( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/60 * 1/5 + 1 ),2)),
-			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
-			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
-			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
-			'nDays' : str(int(np.floor( (self.reducedDF['Dates'].iloc[-1] - self.reducedDF['Dates'].iloc[0]).total_seconds()/3600 * 1/24 + 1 ))),
-			'nValues' : str(len(self.reducedDF['CGM'])),
-			'nUrgentLow' : str(sum(self.reducedDF['CGM'] < thrsUL)),
-			'nBelowRange' : str(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))),
-			'nInRange' : str(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))),
-			'nAboveRange' : str(sum(self.reducedDF['CGM'] >= thrsAR)),
-			'PerUrgentLow' : str(round(sum(self.reducedDF['CGM'] < thrsUL)/len(self.reducedDF['CGM']),3)),
-			'PerBelowRange' : str(round(sum((self.reducedDF['CGM'] >= thrsUL) & (self.reducedDF['CGM'] < thrsBR))/len(self.reducedDF['CGM']),3)),
-			'PerInRange' : str(round(sum((self.reducedDF['CGM'] >= thrsBR) & (self.reducedDF['CGM'] < thrsAR))/len(self.reducedDF['CGM']),3)),
-			'PerAboveRange' : str(round(sum(self.reducedDF['CGM'] >= thrsAR)/len(self.reducedDF['CGM']),3)),
-			'CoeffVariation' : str(round(np.std(self.reducedDF['CGM'])/np.mean(self.reducedDF['CGM']),3)),
-			'GMI' : str(round(np.mean(self.reducedDF['CGM']) * 0.02392 + 3.31, 3)),
-			}
+	def recursive_items(self, dictionary, prepend = ['root']):
+		'''
+		https://stackoverflow.com/questions/39233973/get-all-keys-of-a-nested-dictionary
+		'''
+		for key, value in dictionary.items():
+			# print(type(value))
+			if type(value) is list:
+				# print(key)
+				self.isList(dictionary, key)
+			elif type(value) is dict:
+				yield (key, value, type(value))
+				# prepend.append(key)
+				yield from self.recursive_items(value, prepend + [key])
+			else:
+				string = self.listToString(prepend)
+				yield (f'{string}{key}', value, type(value))
+
+	def listToString(self, l):
+		# string =
+		string = ''
+		for i in l:
+			string = string + i + '-'
+		return string
+
+	def getStrings(self, array):
+		l = dict()
+		for i in range(len(array)):
+			if array[i][2] != dict:
+				# l.append({arr[i][0] : arr[i][1]})
+				l[array[i][0]] = array[i][1]
+		return l
+
+	def JSONToDFRow(self, obj, getColumnNames=False):
+		tripleArray = list(self.recursive_items(obj))
+		rowToDataFrame = self.getStrings(tripleArray)
+		# if getColumnNames:
+		#     return rowToDataFrame.keys()
+		# else:
+		#     return list(rowToDataFrame.values())
+		return rowToDataFrame
+
+	def initDFDict(self):
+		self.resourcesDF = {}
+
+		for res in self.typeOfResources:
+			self.resourcesDF[res.split(".")[0]] = []
+
+	def saveDataFrame(self, resourceType='Observations', filename='Observations.csv'):
+		self.resourcesDF[resourceType].to_csv(os.path.join(self.path, f'{resourceType}.csv'), index=False)
+
 
 if __name__ == '__main__':
 	stats("2021-06-01")

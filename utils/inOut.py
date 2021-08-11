@@ -36,8 +36,8 @@ class inOut(object):
 		'''
 
 		self.dt = str(datetime.now()).split(' ')[0]
-		# self.path = "https://trustsphere.demo.smilecdr.com/fhir-request/$export?_since=" + date + "T00:00:00Z"
-		self.path = "http://trustsphere.demo.smilecdr.com/fhir-request/Group/" + group_id + "/$export?_since=" + date + "T00:00:00Z"
+		self.path = "https://trustsphere.demo.smilecdr.com/fhir-request/$export?_since=" + date + "T00:00:00Z"
+		# self.path = "http://trustsphere.demo.smilecdr.com/fhir-request/Group/" + group_id + "/$export?_since=" + date + "T00:00:00Z"
 		self.pathToDump = 'TS-BulkExport-' + self.dt
 		self.Obs = []
 		self.Group = []

@@ -17,26 +17,6 @@ class ObsDF(inOut):
 			except:
 				self.logging.info(f'Something went wrong when creating the CSV for {key} resource')
 
-
-		# try:
-		#     self.createDataFrame(resourceType = "CodeSystem")
-		#     self.createDataFrame(resourceType = "CodeSystem")
-		#     self.createDataFrame(resourceType = "CodeSystem")
-		# except:
-		#     self.logging.info("Oh oh... No CodeSystem resources...")
-		# try:
-		#     self.createDataFrame(resourceType = "Questionnaire")
-		#     self.createDataFrame(resourceType = "Questionnaire")
-		#     self.createDataFrame(resourceType = "Questionnaire")
-		# except:
-		#     self.logging.info("Oh oh... No Questionnaire resources...")
-		# try:
-		#     self.createDataFrame(resourceType = "QuestionnaireResponse")
-		#     self.createDataFrame(resourceType = "QuestionnaireResponse")
-		#     self.createDataFrame(resourceType = "QuestionnaireResponse")
-		# except:
-		#     self.logging.info("Oh oh... No QuestionnaireResponse resources...")
-
 	def createDataFrame(self, resourceType = "Observation", MAX=0):
 		if MAX > 0 and MAX <= len(self.resources[resourceType]):
 			limit = MAX
@@ -52,68 +32,6 @@ class ObsDF(inOut):
 				self.resourcesDF[resourceType].iloc[i][key] = self.temp[key]
 
 		self.saveDataFrame(resourceType = resourceType)
-
-
-		# if resourceType == "Observation":
-		#     if MAX > 0 and MAX <= len(self.Obs):
-		#         limit = MAX
-		#     else:
-		#         limit = len(self.Obs)
-		#
-		#     self.temp = self.JSONToDFRow(self.Obs[0])
-		#     self.df = pd.DataFrame(index=range(limit), columns=self.temp.keys())
-		#     self.logging.info(self.df.shape)
-		#     for i in range(limit):
-		#         self.temp = self.JSONToDFRow(self.Obs[i])
-		#         for key in self.temp:
-		#             self.df.iloc[i][key] = self.temp[key]
-		#
-		#     self.saveDataFrame()
-		# elif resourceType == "CodeSystem":
-		#     if MAX > 0 and MAX <= len(self.CodeSystem):
-		#         limit = MAX
-		#     else:
-		#         limit = len(self.CodeSystem)
-		#
-		#     self.temp = self.JSONToDFRow(self.CodeSystem[0])
-		#     self.dfCodeSystem = pd.DataFrame(index=range(limit), columns=self.temp.keys())
-		#     self.logging.info(self.dfCodeSystem.shape)
-		#     for i in range(limit):
-		#         self.temp = self.JSONToDFRow(self.CodeSystem[i])
-		#         for key in self.temp:
-		#             self.dfCodeSystem.iloc[i][key] = self.temp[key]
-		#
-		#     self.saveDataFrame(filename="CodeSystem.csv")
-		# elif resourceType == "Questionnaire":
-		#     if MAX > 0 and MAX <= len(self.Questionnaire):
-		#         limit = MAX
-		#     else:
-		#         limit = len(self.Questionnaire)
-		#
-		#     self.temp = self.JSONToDFRow(self.Questionnaire[0])
-		#     self.dfQuestionnaire = pd.DataFrame(index=range(limit), columns=self.temp.keys())
-		#     self.logging.info(self.dfQuestionnaire.shape)
-		#     for i in range(limit):
-		#         self.temp = self.JSONToDFRow(self.Questionnaire[i])
-		#         for key in self.temp:
-		#             self.dfQuestionnaire.iloc[i][key] = self.temp[key]
-		#
-		#     self.saveDataFrame(filename="Questionnaire.csv")
-		# elif resourceType == "QuestionnaireResponse":
-		#     if MAX > 0 and MAX <= len(self.QuestionnaireResponse):
-		#         limit = MAX
-		#     else:
-		#         limit = len(self.QuestionnaireResponse)
-		#
-		#     self.temp = self.JSONToDFRow(self.QuestionnaireResponse[0])
-		#     self.dfQuestionnaireResponse = pd.DataFrame(index=range(limit), columns=self.temp.keys())
-		#     self.logging.info(self.dfQuestionnaireResponse.shape)
-		#     for i in range(limit):
-		#         self.temp = self.JSONToDFRow(self.QuestionnaireResponse[i])
-		#         for key in self.temp:
-		#             self.dfQuestionnaireResponse.iloc[i][key] = self.temp[key]
-		#
-		#     self.saveDataFrame(filename="QuestionnaireResponse.csv")
 
 	def isList(self, d, keyword):
 		if type(d.get(keyword)) == list:
@@ -167,15 +85,6 @@ class ObsDF(inOut):
 
 	def saveDataFrame(self, resourceType='Observations', filename='Observations.csv'):
 		self.resourcesDF[resourceType].to_csv(os.path.join(os.getcwd(), self.pathToDump, f'{resourceType}.csv'), index=False)
-
-		# if filename=='Observations.csv':
-		#     self.df.to_csv(os.path.join(os.getcwd(), self.pathToDump, filename), index=False)
-		# elif filename=='CodeSystem.csv':
-		#     self.dfCodeSystem.to_csv(os.path.join(os.getcwd(), self.pathToDump, filename), index=False)
-		# elif filename=='Questionnaire.csv':
-		#     self.dfQuestionnaire.to_csv(os.path.join(os.getcwd(), self.pathToDump, filename), index=False)
-		# elif filename=='QuestionnaireResponse.csv':
-		#     self.dfQuestionnaireResponse.to_csv(os.path.join(os.getcwd(), self.pathToDump, filename), index=False)
 
 	def initDFDict(self):
 		self.resourcesDF = {}
