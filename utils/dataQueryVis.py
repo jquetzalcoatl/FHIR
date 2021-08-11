@@ -42,7 +42,7 @@ class dataQuery(object):
 		# self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'Metadata.json')
 		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
 		# self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
-		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observation.csv'))
+		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observations.csv'))
 		self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'data.json')
 		# self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
 		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['root-effectiveDateTime'])), axis=1)
