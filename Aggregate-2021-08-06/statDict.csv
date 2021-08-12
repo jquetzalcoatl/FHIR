@@ -1,0 +1,2 @@
+root-units,root-mean,root-median,root-min,root-max,root-var,root-std,root-sum,root-q25,root-q50,root-q75,root-utilizationPerc,root-hypoRisk,root-LowBGIndex,root-HighBGIndex,root-nDays,root-nValues,root-nUrgentLow,root-nBelowRange,root-nInRange,root-nAboveRange,root-PerUrgentLow,root-PerBelowRange,root-PerInRange,root-PerAboveRange,root-CoeffVariation,root-GMI
+mg/dL,180.458,155.0,0.0,550.0,9975.958,99.88,903915.6,115.0,155.0,231.0,0.58,High risk,84.46,12.656,31,5009,331,112,2904,1662,0.066,0.022,0.58,0.332,0.553,7.627
