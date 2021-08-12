@@ -7,7 +7,7 @@ import json
 
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
-#
+
 # b = dataQuery()
 # b.aggDict['PathToCSV']
 # # ag = b.loadJSON(os.path.join(os.getcwd(), 'Aggregate-2021-07-28'), 'AggDataDict.json')
@@ -38,17 +38,18 @@ import json
 # b.ObsDF.apply(lambda x : b.getDate(str(x['Dates'])), axis=1)
 
 class dataQuery(object):
-	def __init__(self, date='2021-07-28', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		# self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'Metadata.json')
-		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
+	def __init__(self, date='2021-08-06', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+		self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'Metadata.json')
+		# self.aggDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'AggDataDict.json')
 		# self.ObsDF = pd.read_csv(self.aggDict['PathToCSV'])
-		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observations.csv'))
-		# self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'data.json')
+		self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Aggregate-' + date, 'Observation.csv'))
+		self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Aggregate-' + date), 'data.json')
 		# self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['Dates'])), axis=1)
 		self.ObsDF['Dates'] = self.ObsDF.apply(lambda x : self.getDate(str(x['root-effectiveDateTime'])), axis=1)
 		self.createPtDF()
 		#
-		# self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
+		self.getWindow(ptId, dateStart, dateEnd)
+		self.BGRiskAssesment = BGRiskAssesment(self.reducedDF['CGM'])
 
 	def saveJSON(self, obj, path, filename='FHIRdata.json'):
 		dictJSON = json.dumps(obj)
@@ -79,52 +80,58 @@ class dataQuery(object):
 
 	def getWindow(self, ptId=0, dateStart=0, dateEnd=0):
 		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
-			q1 = self.ObsDF['Patients'] == ptId
+			q1 = self.ObsDF['root-subject-reference'] == ptId
 		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q2 = self.ObsDF['Dates'] >= self.getDate(dateStart)
 		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q3 = self.ObsDF['Dates'] <= self.getDate(dateEnd)
 
 		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+		self.reducedDF = self.reducedDF.rename({'root-valueQuantity-value' : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
+		self.reducedDF['CGM (mmol/L)'] = self.reducedDF['CGM']/18.0
 		return self.ObsDF[q1 & q2 & q3]
 
 	def getWindow2(self, ptId=0, dateStart=0, dateEnd=0):
 		if ptId == 0:
-			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
-			q1 = self.ObsDF['Patients'] == ptId
+			q1 = self.ObsDF['root-subject-reference'] == ptId
 		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q2 = self.ObsDF['Dates'] >= dateStart
 		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q3 = self.ObsDF['Dates'] <= dateEnd
 
 		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+		self.reducedDF = self.reducedDF.rename({'root-valueQuantity-value' : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
+		self.reducedDF['CGM (mmol/L)'] = self.reducedDF['CGM']/18.0
 
 	def getWindow3(self, ptId=0, dateStart=0, dateEnd=0):
 		if ptId == 'All':
-			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q1 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
-			q1 = self.ObsDF['Patients'] == ptId
+			q1 = self.ObsDF['root-subject-reference'] == ptId
 		if dateStart == 0:
-			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q2 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q2 = self.ObsDF['Dates'].apply(lambda x : self.getDate(str(x))) >= dateStart
 		if dateEnd == 0:
-			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['CGM']))])[0]
+			q3 = pd.DataFrame([True for i in range(len(self.ObsDF['root-valueQuantity-value']))])[0]
 		else:
 			q3 = self.ObsDF['Dates'].apply(lambda x : self.getDate(str(x))) <= dateEnd
 
 		self.reducedDF = self.ObsDF[q1 & q2 & q3]
+		self.reducedDF = self.reducedDF.rename({'root-valueQuantity-value' : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
+		self.reducedDF['CGM (mmol/L)'] = self.reducedDF['CGM']/18.0
 
 	def getStats(self, thrsUL=55, thrsBR=80, thrsAR=200):
 		self.statDict ={
