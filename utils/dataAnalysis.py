@@ -1,44 +1,43 @@
-# from utils.observations import ObsDF
-# from utils.BGriskAssesment import BGRiskAssesment
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import numpy as np
 import json
+import logging
+codeNested = {"Observation" : 'code', "MedicationAdministration" : 'medicationCodeableConcept'}
 
-os.getcwd()
-os.chdir(os.path.join(os.getcwd(), "FHIR"))
-
-
-b = dataObject()
-b.BEfolderList
-b.typeOfResources
-b.dataDict['Observation'][-1]
-
-b.resourcesDF.keys()
+# os.getcwd()
+# os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
 
-b.dataDict['Observation'][oID[2]]
-b.dataDict['Observation'][oID2[0]]
+# b = dataObject(since='2021-08-16', concatenate=True)
+# b.getCodeIDs()
+# b.BEfolderList
 
+
+# b.AggfolderList
+# b.typeOfResources
+# len(b.dataDict['Observation'])
+
+# b.dataDict.keys()
+# b.dataDict['Questionnaire']
+# pd.json_normalize( b.dataDict['Observation'])
 
 class dataObject(object):
-	def __init__(self, since='2021-07-29', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		self.getDirectories(since=since)
+	def __init__(self, since='2021-08-06', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200, concatenate=False):
+		dt = str(datetime.now()).split(' ')[0]
+		self.path = os.path.join(os.getcwd(), f'Complete-{dt}')
+
+		self.getDirectories(since=since, concatenate=concatenate)
 		self.getResourcesType()
 		self.initDict()
-		self.loadResource()
+		self.loadResource(concatenate=concatenate)
 		self.dropDuplicates()
-
-		# self.getDates()
-		# self.getCGM()
-		# self.getPatients()
-		# self.sortData()
-		# self.createTable()
 
 		self.saveData()
 
 		self.initDFDict()
+
 		for key in self.dataDict.keys():
 			try:
 				self.createDataFrame(MAX=10, resourceType=key)
@@ -47,15 +46,34 @@ class dataObject(object):
 			except:
 				pass
 				# self.logging.info(f'Something went wrong when creating the CSV for {key} resource')
+		self.logFunc()
 
-		####################################################
-
-	def getDirectories(self, since='2021-07-07'):
+	def getDirectories(self, since='2021-07-07', concatenate=False):
 		self.BEfolderList = []
 		for folderName in os.listdir(os.getcwd()):
 			if 'TS-BulkExport' in folderName:
 				if self.strToDateTime(folderName.split("BulkExport-")[1]) >= self.strToDateTime(since):
 					self.BEfolderList.append(folderName)
+		# self.logging.info(f'Getting data from Dirs {self.BEfolderList}')
+
+		if concatenate:
+			try:
+				self.AggfolderList = []
+				for folderName in os.listdir(os.getcwd()):
+					if 'Complete' in folderName:
+						# if self.strToDateTime(folderName.split("BulkExport-")[1]) >= self.strToDateTime(since):
+						self.AggfolderList.append(folderName)
+				idx = 0
+				for i, folderName in enumerate(self.AggfolderList):
+					if np.abs(self.strToDateTime(since) - self.strToDateTime(folderName.split("Complete-")[1])) < np.abs(self.strToDateTime(since) - self.strToDateTime(self.AggfolderList[idx].split("Complete-")[1])):
+						idx = i
+				tempList = self.AggfolderList[idx]
+				self.AggfolderList = []
+				self.AggfolderList.append(tempList)
+				# self.logging.info(f'Concatenating it with {self.AggfolderList}')
+			except:
+				pass
+				# self.logging.info(f'No Completed data was found')
 
 	def getResourcesType(self):
 		self.typeOfResources = []
@@ -67,7 +85,7 @@ class dataObject(object):
 			if typeRes.split(".")[1] == 'json':
 				self.typeOfResources.append(typeRes)
 
-	def loadResource(self):
+	def loadResource(self, concatenate=False):
 		for folder in self.BEfolderList:
 			path = os.path.join(os.getcwd(), folder)
 			for file in os.listdir(path):
@@ -78,7 +96,18 @@ class dataObject(object):
 						self.d[file.split(".")[0]] = self.d[file.split(".")[0]] + self.loadJSON(path, file)
 					except:
 						self.d[file.split(".")[0]].append(self.loadJSON(path, file))
-						print(f'Unable to load {path} {file}')
+
+
+		if concatenate:
+			path = os.path.join(os.getcwd(), self.AggfolderList[0])
+			print(path)
+			tempData = self.loadJSON(path, 'Data.json')
+			for key in self.d.keys():
+				try:
+					self.d[key] = self.d[key] + tempData[key]
+				except:
+					pass
+
 
 	def dropDuplicates(self):
 		for key in self.d.keys():
@@ -90,7 +119,7 @@ class dataObject(object):
 							self.dataDict[key].append(self.d[key][i])
 							break
 			except:
-				print("Probabbly no ID found for", key)
+				# self.logging.info(f'Probabbly no ID found for {key}')
 				self.dataDict[key] = self.d[key]
 
 	def strToDateTime(self,x):
@@ -120,35 +149,9 @@ class dataObject(object):
 			except:
 				return datetime.fromisoformat(x[:])
 
-	def getDates(self):
-		self.dates = [self.getDate(self.dataDict['Observation'][i]['effectiveDateTime']) for i in range(len(self.dataDict['Observation'])) ]
-
-	def getCGM(self):
-		self.CGM = [self.dataDict['Observation'][i]['valueQuantity']['value'] for i in range(len(self.dataDict['Observation'])) ]
-		self.CGM2 = [self.dataDict['Observation'][i]['valueQuantity']['value']/18 for i in range(len(self.dataDict['Observation'])) ]
-
-	def getPatients(self):
-		self.Pts = [self.dataDict['Observation'][i]['subject']['reference'] for i in range(len(self.dataDict['Observation'])) ]
-
-	def sortData(self):
-		idx = np.argsort(self.dates)
-		self.dates = [self.dates[i] for i in idx]
-		self.CGM = [self.CGM[i] for i in idx]
-		self.Pts = [self.Pts[i] for i in idx]
-		self.CGM2 = [self.CGM2[i] for i in idx]
-
-	def createTable(self):
-		self.ObsDF = pd.DataFrame(index=range(len(self.CGM)), columns=['Patients', 'CGM', 'Dates'])
-		self.ObsDF['Patients'] = self.Pts
-		self.ObsDF['CGM'] = self.CGM
-		self.ObsDF['Dates'] = self.dates
-		self.ObsDF['CGM (mmol/L)'] = self.CGM2
-
 	def saveData(self):
-		dt = str(datetime.now()).split(' ')[0]
-		os.path.isdir(os.path.join(os.getcwd(), f'Aggregate-{dt}')) or os.mkdir(os.path.join(os.getcwd(), f'Aggregate-{dt}'))
+		os.path.isdir(self.path) or os.mkdir(self.path)
 		#save self.ObsDF
-		self.path = os.path.join(os.getcwd(), f'Aggregate-{dt}')
 		self.makeAggDict(self.path)
 		# self.ObsDF.to_csv(os.path.join(path, 'Observation.csv'), index=False)
 		self.saveJSON(self.aggDict, self.path, filename='Metadata.json')
@@ -161,19 +164,26 @@ class dataObject(object):
 		self.aggDict['TypeOfResources'] = self.typeOfResources
 		self.aggDict['Patients'] = np.unique([self.dataDict['Observation'][i]['subject']['reference'] for i in range(len(self.dataDict['Observation']))]).tolist()#np.unique(self.ObsDF.Patients).tolist()
 		self.aggDict['ObsIDs'] = [self.dataDict['Observation'][i]['id'] for i in range(len(self.dataDict['Observation']))]
-		self.aggDict['Codes'] = self.parseIDs()
+		self.aggDict['Codes'] = self.getCodeIDs() #self.parseIDs('Observation')
 		self.aggDict['PathToCSV'] = os.path.join(path, 'Observation.csv')
 
-	def parseIDs(self):
-		codes = np.unique([self.dataDict['Observation'][i]['code']['coding'][0]['code'] for i in range(len(self.dataDict['Observation']))]).tolist()
+	def getCodeIDs(self):
+		self.temp = {}
+		for key in ['Observation', 'MedicationAdministration']:
+			self.temp[key] = self.parseIDs(key)
+		return self.temp
+
+	def parseIDs(self, key):
+		print(self.dataDict[key][0][codeNested[key]]['coding'][0]['code'])
+		codes = np.unique([self.dataDict[key][i][codeNested[key]]['coding'][0]['code'] for i in range(len(self.dataDict[key]))]).tolist()
 		self.dictCodes={}
 		for code in codes:
-			for i,obs in enumerate(self.dataDict['Observation']):
-				if obs['code']['coding'][0]['code'] == code:
-					self.dictCodes[code] = {'display' : obs['code']['coding'][0]['display'], 'system' : obs['code']['coding'][0]['system'], 'IDs' : []}
+			for i,obs in enumerate(self.dataDict[key]):
+				if obs[codeNested[key]]['coding'][0]['code'] == code:
+					self.dictCodes[code] = {'display' : obs[codeNested[key]]['coding'][0]['display'], 'system' : obs[codeNested[key]]['coding'][0]['system'], 'resourceType' : key, 'IDs' : []}
 					break
-		for i,obs in enumerate(self.dataDict['Observation']):
-			code = obs['code']['coding'][0]['code']
+		for i,obs in enumerate(self.dataDict[key]):
+			code = obs[codeNested[key]]['coding'][0]['code']
 			self.dictCodes[code]['IDs'].append(obs['id'])
 		return self.dictCodes
 
@@ -185,13 +195,14 @@ class dataObject(object):
 		# for code in self.Codes:
 		# 	for obs in self.dataDict['Observations']
 
-		self.temp = self.JSONToDFRow(self.dataDict[resourceType][0])
-		self.resourcesDF[resourceType] = pd.DataFrame(index=range(limit), columns=self.temp.keys())
+		idx = self.findLargestRow(resourceType)
+		temp = self.JSONToDFRow(self.dataDict[resourceType][idx])
+		self.resourcesDF[resourceType] = pd.DataFrame(index=range(limit), columns=temp.keys())
 		# self.logging.info(self.resourcesDF[resourceType].shape)
 		for i in range(limit):
-			self.temp = self.JSONToDFRow(self.dataDict[resourceType][i])
-			for key in self.temp:
-				self.resourcesDF[resourceType].iloc[i][key] = self.temp[key]
+			temp = self.JSONToDFRow(self.dataDict[resourceType][i])
+			for key in temp:
+				self.resourcesDF[resourceType].iloc[i][key] = temp[key]
 
 		self.saveDataFrame(resourceType = resourceType)
 
@@ -209,13 +220,10 @@ class dataObject(object):
 		https://stackoverflow.com/questions/39233973/get-all-keys-of-a-nested-dictionary
 		'''
 		for key, value in dictionary.items():
-			# print(type(value))
 			if type(value) is list:
-				# print(key)
 				self.isList(dictionary, key)
 			elif type(value) is dict:
 				yield (key, value, type(value))
-				# prepend.append(key)
 				yield from self.recursive_items(value, prepend + [key])
 			else:
 				string = self.listToString(prepend)
@@ -245,6 +253,15 @@ class dataObject(object):
 		#     return list(rowToDataFrame.values())
 		return rowToDataFrame
 
+	def findLargestRow(self, resourceType):
+		idx = 0
+		l = len(self.JSONToDFRow(self.dataDict[resourceType][idx]))
+		for i in range(1, len(self.dataDict[resourceType])):
+			if len(self.JSONToDFRow(self.dataDict[resourceType][i])) > l:
+				idx = i
+				l = len(self.JSONToDFRow(self.dataDict[resourceType][idx]))
+		return idx
+
 	def initDFDict(self):
 		self.resourcesDF = {}
 
@@ -254,6 +271,20 @@ class dataObject(object):
 	def saveDataFrame(self, resourceType='Observations', filename='Observations.csv'):
 		self.resourcesDF[resourceType].to_csv(os.path.join(self.path, f'{resourceType}.csv'), index=False)
 
+	def logFunc(self):
+		self.initTime = datetime.now()
+		self.logging = logging
+		os.path.isdir(os.path.join(os.getcwd(), self.path)) or os.mkdir(os.path.join(os.getcwd(), self.path))
+		self.logging.basicConfig(filename=os.path.join(os.getcwd(), self.path, 'Complete.log'), level=logging.DEBUG)
+		self.logging.info('#######################################################################################')
+		self.logging.info(f'{str(self.initTime).split(".")[0]} - Concatenating data')
+		self.logging.info(f'inOut - Data dumped in {self.path}')
+		self.logging.info(f'Getting data from Dirs {self.BEfolderList}')
+		try:
+			self.logging.info(f'Concatenating it with {self.AggfolderList}')
+		except:
+			self.logging.info(f'No Completed data was found')
+
 
 if __name__ == '__main__':
-	stats("2021-06-01")
+	dataObject(since='2021-08-03', concatenate=False)
