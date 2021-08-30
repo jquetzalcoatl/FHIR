@@ -142,12 +142,27 @@ class inOut(object):
 		return js
 
 	def logFunc(self):
+		'''
+			https://stackoverflow.com/questions/24816456/python-logging-wont-shutdown
+		'''
 		self.initTime = datetime.now()
-		self.logging = logging
 		os.path.isdir(os.path.join(os.getcwd(), self.pathToDump)) or os.mkdir(os.path.join(os.getcwd(), self.pathToDump))
-		self.logging.basicConfig(filename=os.path.join(os.getcwd(), self.pathToDump, 'bulkExport.log'), level=logging.DEBUG)
+
+		self.logging = logging
+		self.logging = logging.getLogger()
+		self.logging.setLevel(logging.DEBUG)
+		self.handler = logging.FileHandler(os.path.join(os.getcwd(), self.pathToDump, 'bulkExport.log'))
+		self.handler.setLevel(logging.DEBUG)
+		formatter = logging.Formatter(
+		            fmt='%(asctime)s %(levelname)s: %(message)s',
+		            datefmt='%Y-%m-%d %H:%M:%S'
+		            )
+		self.handler.setFormatter(formatter)
+		self.logging.addHandler(self.handler)
+
 		self.logging.info(f'{str(self.initTime).split(".")[0]} - Bulk Export started')
 		self.logging.info(f'inOut - Data will be dumped in {self.pathToDump}')
+		# self.logging.removeHandler(self.handler) #To close
 
 	def initDict(self):
 		self.resources = {}

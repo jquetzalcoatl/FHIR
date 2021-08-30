@@ -9,7 +9,6 @@ import logging
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 # df = pd.read_csv("/Users/javier/Desktop/Python/FHIR/temp-2021-06-10/Observations.csv")
 
-
 # import json
 # def loadJSON(filename='/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/binariesRequestDict.json'):
 # def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/MedicationAdministration.json"):
@@ -58,7 +57,8 @@ if __name__ == '__main__':
 	print(f'Date selected: {args.date}. Max number of binaries set to {args.max}')
 	# r = stats(date=args.date, MAX=args.max)
 	r = ObsDF(date=args.date, MAX=args.max)
-	r.logging.info(f'{str(datetime.now()).split(".")[0]} - Bulk Export ended after t = {str(datetime.now() - r.initTime)}')
+	r.logging.info(f'Bulk Export ended after t = {str(datetime.now() - r.initTime)}')
 	r.logging.info(f'#############################################################################################')
+	r.logging.removeHandler(r.handler)
 	# os.system(f'streamlit run visualization.py -- --date {str(datetime.now()).split(" ")[0]}')
 	# !streamlit run visualization.py -- --date str(datetime.now()).split(" ")[0]
