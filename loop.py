@@ -18,7 +18,8 @@ if __name__ == '__main__':
 		r = ObsDF(date=since, MAX=0)
 		r.logging.info(f'{str(datetime.now()).split(".")[0]} - Bulk Export ended after t = {str(datetime.now() - r.initTime)}')
 		r.logging.info(f'#############################################################################################')
+		r.logging.shutdown()
 		b = dataObject(since=since, aggregate=True)
-		time.sleep(86400) #Sleep 2*24hrs
+		time.sleep(120) #Sleep 2*24hrs = 2 * 86400
 	# os.system(f'streamlit run visualization.py -- --date {str(datetime.now()).split(" ")[0]}')
 	# !streamlit run visualization.py -- --date str(datetime.now()).split(" ")[0]

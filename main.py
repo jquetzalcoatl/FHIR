@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import logging
 
-# import pandas as pd
+
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 # df = pd.read_csv("/Users/javier/Desktop/Python/FHIR/temp-2021-06-10/Observations.csv")
@@ -14,6 +14,7 @@ import logging
 # def loadJSON(filename='/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/binariesRequestDict.json'):
 # def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/MedicationAdministration.json"):
 # def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/Observation.json"):
+# def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-08-30/QuestionnaireResponse.json"):
 # 	with open(filename, 'r') as h:
 # 		js = json.load(h)
 # 	return js
@@ -21,7 +22,10 @@ import logging
 #
 # #
 # jsonObj1 = loadJSON()
-# jsonObj[0]
+# jsonObj1[2]
+# [jsonObj1[i]['id'] for i in range(9)]
+# [jsonObj1[i]['meta']['lastUpdated'] for i in range(9)]
+# [jsonObj1[i]['questionnaire'] for i in range(9)]
 # sum([jsonObj1[i]['id'] == '44655829-5b03-4feb-9f32-eaad89077e0e-1' for i in range(len(jsonObj1))])
 # for i in range(len(jsonObj1)):
 # 	if jsonObj1[i]['id'] == '44655829-5b03-4feb-9f32-eaad89077e0e-2':
@@ -47,7 +51,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser("Add date in yyyy-mm-dd format")
 	parser.add_argument('--date', dest="date", type=str, default="2021-04-21",
 						help='Specify date since tag for FHIR bulk export. \n Default set to 2021-04-21')
-	parser.add_argument('--max', dest="max", type=int, default=15,
+	parser.add_argument('--max', dest="max", type=int, default=0,
 						help='Specify number of binaries. \n Default set to 5')
 	args = parser.parse_args()
 	print(f'Main - Data transfer since {args.date} starting...')
