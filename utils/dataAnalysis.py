@@ -100,7 +100,7 @@ class dataObject(object):
 
 		if concatenate:
 			path = os.path.join(os.getcwd(), self.AggfolderList[0])
-			print(path)
+			# print(path)
 			tempData = self.loadJSON(path, 'Data.json')
 			for key in self.d.keys():
 				try:
@@ -174,7 +174,7 @@ class dataObject(object):
 		return self.temp
 
 	def parseIDs(self, key):
-		print(self.dataDict[key][0][codeNested[key]]['coding'][0]['code'])
+		# print(self.dataDict[key][0][codeNested[key]]['coding'][0]['code'])
 		codes = np.unique([self.dataDict[key][i][codeNested[key]]['coding'][0]['code'] for i in range(len(self.dataDict[key]))]).tolist()
 		self.dictCodes={}
 		for code in codes:
