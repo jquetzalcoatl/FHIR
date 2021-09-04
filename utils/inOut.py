@@ -172,7 +172,7 @@ class inOut(object):
 			for res in self.typeOfResources:
 				self.resources[res] = []
 		except:
-			self.logging.info(f'No new data in that time window. Check the output field in binariesRequestDict.json which seems to be missing')
+			self.logging.error(f'No new data in that time window. Check the output field in binariesRequestDict.json which seems to be missing')
 			sys.exit(1)
 
 
