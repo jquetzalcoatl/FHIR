@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import os
 import logging
+import sys
 
 # PATH = "https://trustsphere.demo.smilecdr.com/fhir-request/Observation?code=440404000&subject=Patient/292046&date=lt2021-05-30T00:00:00Z&date=gt2021-05-15T00:00:00Z"
 # PATH = "https://trustsphere.demo.smilecdr.com/fhir-request/$export?_since=2021-05-29T00:00:00Z"
@@ -166,9 +167,13 @@ class inOut(object):
 
 	def initDict(self):
 		self.resources = {}
-		self.typeOfResources = np.unique([self.binariesRequestDict['output'][i]['type'] for i in range(len(self.binariesRequestDict['output']))]).tolist()
-		for res in self.typeOfResources:
-			self.resources[res] = []
+		try:
+			self.typeOfResources = np.unique([self.binariesRequestDict['output'][i]['type'] for i in range(len(self.binariesRequestDict['output']))]).tolist()
+			for res in self.typeOfResources:
+				self.resources[res] = []
+		except:
+			self.logging.info(f'No new data in that time window. Check the output field in binariesRequestDict.json which seems to be missing')
+			sys.exit(1)
 
 
 if __name__ == '__main__':

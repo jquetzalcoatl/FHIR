@@ -8,6 +8,7 @@ import logging
 
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
+# nohup python3 loop.py &
 
 if __name__ == '__main__':
 	while True:
