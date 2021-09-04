@@ -45,9 +45,9 @@ class inOut(object):
 		# PUT -> server consent w/o and participants
 		self.logFunc()
 		self.getBinaryLinks()
-		self.initDict()
-		self.getAllBinaries(MAX=MAX)
-		self.logging.info('inOut - Binaries Loaded!')
+		if self.initDict():
+			self.getAllBinaries(MAX=MAX)
+			self.logging.info('inOut - Binaries Loaded!')
 
 	def getBinaryLinks(self):
 		self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"})
@@ -171,9 +171,10 @@ class inOut(object):
 			self.typeOfResources = np.unique([self.binariesRequestDict['output'][i]['type'] for i in range(len(self.binariesRequestDict['output']))]).tolist()
 			for res in self.typeOfResources:
 				self.resources[res] = []
+			return True
 		except:
 			self.logging.error(f'No new data in that time window. Check the output field in binariesRequestDict.json which seems to be missing')
-			sys.exit(1)
+			# sys.exit(1)
 
 
 if __name__ == '__main__':

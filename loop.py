@@ -13,7 +13,7 @@ import logging
 if __name__ == '__main__':
 	while True:
 		# print(f'Main - Current directory: {os.getcwd()}')
-		since = str(datetime.today() - timedelta(days=1)).split(" ")[0]
+		since = str(datetime.today() - timedelta(days=21)).split(" ")[0]
 		# print(f'Main - Data transfer since {since} starting...')
 
 		r = ObsDF(date=since, MAX=0)
