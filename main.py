@@ -1,4 +1,4 @@
-from utils.observations import ObsDF
+from utils.resources import resources
 import argparse
 import os
 from datetime import datetime
@@ -13,14 +13,14 @@ import logging
 # def loadJSON(filename='/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/binariesRequestDict.json'):
 # def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/MedicationAdministration.json"):
 # def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-07-29/Observation.json"):
-# def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/TS-BulkExport-2021-08-30/QuestionnaireResponse.json"):
+# def loadJSON(filename="/Users/javier/Desktop/Python/FHIR/Complete-2021-08-30/Metadata.json"):
 # 	with open(filename, 'r') as h:
 # 		js = json.load(h)
 # 	return js
 #
 #
 # #
-# jsonObj1 = loadJSON()
+
 # jsonObj1[2]
 # [jsonObj1[i]['id'] for i in range(9)]
 # [jsonObj1[i]['meta']['lastUpdated'] for i in range(9)]
@@ -45,6 +45,7 @@ import logging
 # # r.Questionnaire
 # r.dfQuestionnaire
 
+
 if __name__ == '__main__':
 	print(f'Main - Current directory: {os.getcwd()}')
 	parser = argparse.ArgumentParser("Add date in yyyy-mm-dd format")
@@ -56,7 +57,7 @@ if __name__ == '__main__':
 	print(f'Main - Data transfer since {args.date} starting...')
 	print(f'Date selected: {args.date}. Max number of binaries set to {args.max}')
 	# r = stats(date=args.date, MAX=args.max)
-	r = ObsDF(date=args.date, MAX=args.max)
+	r = resources(date=args.date, MAX=args.max)
 	r.logging.info(f'Bulk Export ended after t = {str(datetime.now() - r.initTime)}')
 	r.logging.info(f'#############################################################################################')
 	r.logging.removeHandler(r.handler)
