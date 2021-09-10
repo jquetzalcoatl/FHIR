@@ -4,24 +4,34 @@ from datetime import datetime, date, timedelta
 import numpy as np
 import json
 import logging
-codeNested = {"Observation" : 'code', "MedicationAdministration" : 'medicationCodeableConcept'}
+from utils.dataTuples import codeNested, filesToDrop
 
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
 
-# b = dataObject(since='2021-08-16', concatenate=True)
+# b = dataObject(since='2021-09-07', concatenate=False)
 # b.getCodeIDs()
 # b.BEfolderList
 
+# filesToDrop[0]
 
-# b.AggfolderList
+# b.AggfolderList = []
 # b.typeOfResources
-# len(b.dataDict['Observation'])
-
+# b.typeOfResources.remove(filesToDrop[0])
+#
+#
+# b.aggDict.keys()
+#
+# b.aggDict['Directories']
+# b.aggDict['Patients']
+# b.aggDict['Codes'].keys()
+# b.aggDict['PathToCSV']
 # b.dataDict.keys()
 # b.dataDict['Questionnaire']
 # pd.json_normalize( b.dataDict['Observation'])
+
+
 
 class dataObject(object):
 	def __init__(self, since='2021-08-06', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200, concatenate=False):
@@ -56,17 +66,20 @@ class dataObject(object):
 					self.BEfolderList.append(folderName)
 		# self.logging.info(f'Getting data from Dirs {self.BEfolderList}')
 
+		self.AggfolderList = []
 		if concatenate:
 			try:
-				self.AggfolderList = []
 				for folderName in os.listdir(os.getcwd()):
 					if 'Complete' in folderName:
 						# if self.strToDateTime(folderName.split("BulkExport-")[1]) >= self.strToDateTime(since):
 						self.AggfolderList.append(folderName)
 				idx = 0
+				self.AggfolderList = self.getCompleteDirsBeforeDate(since)
 				for i, folderName in enumerate(self.AggfolderList):
+					# if self.strToDateTime(since) > self.strToDateTime(folderName.split("Complete-")[1]):
 					if np.abs(self.strToDateTime(since) - self.strToDateTime(folderName.split("Complete-")[1])) < np.abs(self.strToDateTime(since) - self.strToDateTime(self.AggfolderList[idx].split("Complete-")[1])):
 						idx = i
+				print(idx)
 				tempList = self.AggfolderList[idx]
 				self.AggfolderList = []
 				self.AggfolderList.append(tempList)
@@ -84,12 +97,15 @@ class dataObject(object):
 		for typeRes in typeOfResources:
 			if typeRes.split(".")[1] == 'json':
 				self.typeOfResources.append(typeRes)
+		for filename in filesToDrop:
+			self.typeOfResources.remove(filename)
+		print(self.typeOfResources)
 
 	def loadResource(self, concatenate=False):
 		for folder in self.BEfolderList:
 			path = os.path.join(os.getcwd(), folder)
 			for file in os.listdir(path):
-				if file.split(".")[1] == "json":
+				if file.split(".")[1] == "json" and file not in filesToDrop:
 					# self.d[file.split(".")[0]].append(self.loadJSON(path, file))
 					# self.d[file.split(".")[0]] = self.d[file.split(".")[0]] + self.loadJSON(path, file)
 					try:
@@ -108,6 +124,10 @@ class dataObject(object):
 				except:
 					pass
 
+	def getCompleteDirsBeforeDate(self, since):
+		booleanList = [self.strToDateTime(since) > self.strToDateTime(folderName.split("Complete-")[1]) for folderName in self.AggfolderList]
+		idxs = [i for i, x in enumerate(booleanList) if x]
+		return [self.AggfolderList[i] for i in idxs]
 
 	def dropDuplicates(self):
 		for key in self.d.keys():
@@ -160,12 +180,12 @@ class dataObject(object):
 
 	def makeAggDict(self, path):
 		self.aggDict = {}
-		self.aggDict['Directories'] = self.BEfolderList
+		self.aggDict['Directories'] = self.BEfolderList + self.AggfolderList
 		self.aggDict['TypeOfResources'] = self.typeOfResources
 		self.aggDict['Patients'] = np.unique([self.dataDict['Observation'][i]['subject']['reference'] for i in range(len(self.dataDict['Observation']))]).tolist()#np.unique(self.ObsDF.Patients).tolist()
-		self.aggDict['ObsIDs'] = [self.dataDict['Observation'][i]['id'] for i in range(len(self.dataDict['Observation']))]
+		# self.aggDict['ObsIDs'] = [self.dataDict['Observation'][i]['id'] for i in range(len(self.dataDict['Observation']))]
 		self.aggDict['Codes'] = self.getCodeIDs() #self.parseIDs('Observation')
-		self.aggDict['PathToCSV'] = os.path.join(path, 'Observation.csv')
+		self.aggDict['Path'] = os.path.join(path, 'Data.json')
 
 	def getCodeIDs(self):
 		self.temp = {}
@@ -275,15 +295,29 @@ class dataObject(object):
 		self.initTime = datetime.now()
 		self.logging = logging
 		os.path.isdir(os.path.join(os.getcwd(), self.path)) or os.mkdir(os.path.join(os.getcwd(), self.path))
-		self.logging.basicConfig(filename=os.path.join(os.getcwd(), self.path, 'Complete.log'), level=logging.DEBUG)
+
+		self.logging = logging.getLogger()
+		self.logging.setLevel(logging.DEBUG)
+		self.handler = logging.FileHandler(os.path.join(os.getcwd(), self.path, 'Complete.log'))
+		self.handler.setLevel(logging.DEBUG)
+		formatter = logging.Formatter(
+		            fmt='%(asctime)s %(levelname)s: %(message)s',
+		            datefmt='%Y-%m-%d %H:%M:%S'
+		            )
+		self.handler.setFormatter(formatter)
+		self.logging.addHandler(self.handler)
+
 		self.logging.info('#######################################################################################')
 		self.logging.info(f'{str(self.initTime).split(".")[0]} - Concatenating data')
-		self.logging.info(f'inOut - Data dumped in {self.path}')
+		self.logging.info(f'Data dumped in {self.path}')
 		self.logging.info(f'Getting data from Dirs {self.BEfolderList}')
 		try:
 			self.logging.info(f'Concatenating it with {self.AggfolderList}')
 		except:
 			self.logging.info(f'No Completed data was found')
+
+
+
 
 
 if __name__ == '__main__':
