@@ -35,7 +35,8 @@ from utils.dataTuples import codeNested, filesToDrop
 
 class concat(object):
 	def __init__(self, since='2021-08-06', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200, concatenate=False):
-		dt = str(datetime.now()).split(' ')[0]
+		self.initTime = datetime.now()
+		dt = str(self.initTime).split(' ')[0]
 		self.path = os.path.join(os.getcwd(), f'Complete-{dt}')
 
 		self.getDirectories(since=since, concatenate=concatenate)
@@ -79,7 +80,6 @@ class concat(object):
 					# if self.strToDateTime(since) > self.strToDateTime(folderName.split("Complete-")[1]):
 					if np.abs(self.strToDateTime(since) - self.strToDateTime(folderName.split("Complete-")[1])) < np.abs(self.strToDateTime(since) - self.strToDateTime(self.AggfolderList[idx].split("Complete-")[1])):
 						idx = i
-				print(idx)
 				tempList = self.AggfolderList[idx]
 				self.AggfolderList = []
 				self.AggfolderList.append(tempList)
@@ -99,7 +99,6 @@ class concat(object):
 				self.typeOfResources.append(typeRes)
 		for filename in filesToDrop:
 			self.typeOfResources.remove(filename)
-		print(self.typeOfResources)
 
 	def loadResource(self, concatenate=False):
 		for folder in self.BEfolderList:
@@ -292,7 +291,7 @@ class concat(object):
 		self.resourcesDF[resourceType].to_csv(os.path.join(self.path, f'{resourceType}.csv'), index=False)
 
 	def logFunc(self):
-		self.initTime = datetime.now()
+		# self.initTime = datetime.now()
 		self.logging = logging
 		os.path.isdir(os.path.join(os.getcwd(), self.path)) or os.mkdir(os.path.join(os.getcwd(), self.path))
 
@@ -307,7 +306,6 @@ class concat(object):
 		self.handler.setFormatter(formatter)
 		self.logging.addHandler(self.handler)
 
-		self.logging.info('#######################################################################################')
 		self.logging.info(f'{str(self.initTime).split(".")[0]} - Concatenating data')
 		self.logging.info(f'Data dumped in {self.path}')
 		self.logging.info(f'Getting data from Dirs {self.BEfolderList}')
@@ -315,6 +313,8 @@ class concat(object):
 			self.logging.info(f'Concatenating it with {self.AggfolderList}')
 		except:
 			self.logging.info(f'No Completed data was found')
+		self.logging.info(f'Concatenation ended after t = {str(datetime.now() - self.initTime)}')
+		self.logging.info('#######################################################################################')
 		self.logging.removeHandler(self.handler)
 
 
