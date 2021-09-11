@@ -1,5 +1,5 @@
-from utils.observations import ObsDF
-from utils.dataAnalysis import dataObject
+from utils.resources import resources
+from utils.concatenate import concat
 import argparse
 import os
 from datetime import datetime, date, timedelta
@@ -16,11 +16,11 @@ if __name__ == '__main__':
 		since = str(datetime.today() - timedelta(days=21)).split(" ")[0]
 		# print(f'Main - Data transfer since {since} starting...')
 
-		r = ObsDF(date=since, MAX=0)
+		r = resources(date=since, MAX=0)
 		r.logging.info(f'Bulk Export ended after t = {str(datetime.now() - r.initTime)}')
 		r.logging.info(f'#############################################################################################')
 		r.logging.removeHandler(r.handler)
-		b = dataObject(since=since, concatenate=False)
+		b = concat(since=since, concatenate=False)
 		time.sleep(120) #Sleep 2*24hrs = 2 * 86400
 	# os.system(f'streamlit run visualization.py -- --date {str(datetime.now()).split(" ")[0]}')
 	# !streamlit run visualization.py -- --date str(datetime.now()).split(" ")[0]
