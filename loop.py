@@ -21,6 +21,6 @@ if __name__ == '__main__':
 		r.logging.info(f'#############################################################################################')
 		r.logging.removeHandler(r.handler)
 		b = concat(since=since, concatenate=True)
-		time.sleep(120) #Sleep 2*24hrs = 2 * 86400
+		time.sleep(36000) #Sleep 10 hrs.  2*24hrs = 2 * 86400
 	# os.system(f'streamlit run visualization.py -- --date {str(datetime.now()).split(" ")[0]}')
 	# !streamlit run visualization.py -- --date str(datetime.now()).split(" ")[0]
