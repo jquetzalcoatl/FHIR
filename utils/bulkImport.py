@@ -175,6 +175,7 @@ class bulkImport(object):
 		except:
 			self.logging.error(f'No new data in that time window. Check the output field in binariesRequestDict.json which seems to be missing')
 			# sys.exit(1) # Uncomment this for code to halt when no data is available.
+			return False
 
 
 if __name__ == '__main__':
