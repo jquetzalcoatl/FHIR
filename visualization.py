@@ -100,7 +100,7 @@ with st.beta_container():
 	hour_selected0 = (a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[0])), a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
 
-row1_1, row1_2 = st.columns((2,2))
+row1_1, row1_2 = st.beta_columns((2,2))
 with row1_1:
 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
 
