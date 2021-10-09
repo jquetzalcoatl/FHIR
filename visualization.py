@@ -26,7 +26,7 @@ alt.data_transformers.disable_max_rows()
 #PARSING
 parser = argparse.ArgumentParser(description='This app shows CGM')
 
-parser.add_argument('--date', dest="date", type=str, default="2021-07-21",
+parser.add_argument('--date', dest="date", type=str, default="2021-09-22",
 					help='Specify date since tag for FHIR bulk export. \n Default set to 2021-07-05')
 
 try:
