@@ -56,7 +56,7 @@ apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 local_css("./utils/style.css")
 tt = 2
-with st.container():
+with st.beta_container():
 	st.title("TS-Registry Visualization Tool")
 	st.header(f'(Showing dummy data from {args.date} bulk export!)')
 
@@ -95,7 +95,7 @@ def update_timeSliderRight():
 # min(a.getDate(str(a.reducedDF['Dates'].iloc[-1])), a.getDate(str(a.reducedDF['Dates'].iloc[1])))
 # min(datetime.min.time(), datetime.max.time())
 # with row1_2:
-with st.container():
+with st.beta_container():
 	st.title("Time Window")
 	hour_selected0 = (a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[0])), a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
@@ -134,7 +134,7 @@ with st.sidebar:
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
 a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
-with st.container():
+with st.beta_container():
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
 	# 	thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
@@ -248,7 +248,7 @@ def show_plot(kind: str):
 
 
 # output plots
-with st.container():
+with st.beta_container():
 	# st.text_area("Hello")
 	if x == "mg/dL":
 		show_plot(kind="altair")
@@ -282,7 +282,7 @@ def get_table_download_link(df):
 
 
 # display data
-with st.container():
+with st.beta_container():
 	with st.expander("See stats"):
 		if x == "mg/dL":
 			st.write(a.statDict)
