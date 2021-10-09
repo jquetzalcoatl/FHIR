@@ -1,0 +1,6 @@
+2021-09-22 12:24:49 INFO: 2021-09-22 12:18:00 - Concatenating data
+2021-09-22 12:24:49 INFO: Data dumped in /Users/javier/Desktop/Python/FHIR/Complete-2021-09-22
+2021-09-22 12:24:49 INFO: Getting data from Dirs ['TS-BulkExport-2021-09-09', 'TS-BulkExport-2021-09-22', 'TS-BulkExport-2021-09-10']
+2021-09-22 12:24:49 INFO: Concatenating it with []
+2021-09-22 12:24:49 INFO: Concatenation ended after t = 0:06:48.683125
+2021-09-22 12:24:49 INFO: #######################################################################################

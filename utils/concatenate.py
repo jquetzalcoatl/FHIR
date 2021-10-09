@@ -8,9 +8,9 @@ from utils.dataTuples import codeNested, filesToDrop
 
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
-
-
-# b = concat(since='2021-09-07', concatenate=False)
+#
+#
+# b = concat(since='2021-10-04', concatenate=False)
 # b.getCodeIDs()
 # b.BEfolderList
 
@@ -30,6 +30,7 @@ from utils.dataTuples import codeNested, filesToDrop
 # b.dataDict.keys()
 # b.dataDict['Questionnaire']
 # pd.json_normalize( b.dataDict['Observation'])
+# len(b.dataDict['Observation'])
 
 
 
@@ -189,7 +190,11 @@ class concat(object):
 	def getCodeIDs(self):
 		self.temp = {}
 		for key in ['Observation', 'MedicationAdministration']:
-			self.temp[key] = self.parseIDs(key)
+			try:
+				self.temp[key] = self.parseIDs(key)
+			except:
+				# self.logging.warn(f'Key {key} not found. See makeAggDict function.')
+				pass
 		return self.temp
 
 	def parseIDs(self, key):
@@ -322,4 +327,4 @@ class concat(object):
 
 
 if __name__ == '__main__':
-	concat(since='2021-08-03', concatenate=False)
+	concat(since='2021-09-10', concatenate=False)
