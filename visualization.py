@@ -72,9 +72,9 @@ with st.sidebar:
 	if x == "mmol/L":
 		st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
 	# st.write(x)
-	with st.expander("Choose Patient"):
+	with st.beta_expander("Choose Patient"):
 		chart_type = st.selectbox("", a.metadata['Patients'])
-	with st.expander("Choose Kind of Data"):
+	with st.beta_expander("Choose Kind of Data"):
 		data_type = st.selectbox("", [a.PtDF[chart_type][key]['display'] for key in a.PtDF[chart_type].keys() ])
 if x == "mmol/L":
 	alpha = 1.0/18.0
@@ -129,7 +129,7 @@ thrsAR=198
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
-	with st.expander("Set thresholds"):
+	with st.beta_expander("Set thresholds"):
 		thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
@@ -283,17 +283,17 @@ def get_table_download_link(df):
 
 # display data
 with st.beta_container():
-	with st.expander("See stats"):
+	with st.beta_expander("See stats"):
 		if x == "mg/dL":
 			st.write(a.statDict)
 		else:
 			st.json(a.statDict2)
-	with st.expander("See raw data"):
+	with st.beta_expander("See raw data"):
 		st.dataframe(a.reducedDF[codes['CGM']]['df'])
 
 	st.markdown(get_table_download_link(a.reducedDF[codes['CGM']]['df']), unsafe_allow_html=True)
 
-	# with st.expander("More stuff"):
+	# with st.beta_expander("More stuff"):
 	# 	if x == "mg/dL":
 	# 		show_plot(kind="CGM time series")
 	# 	else:
