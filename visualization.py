@@ -56,7 +56,7 @@ apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 local_css("./utils/style.css")
 
-with st.beta_container():
+with st.container():
 	st.title("TS-Registry Visualization Tool")
 	st.header(f'(Showing dummy data from {args.date} bulk export!)')
 
@@ -72,9 +72,9 @@ with st.sidebar:
 	if x == "mmol/L":
 		st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
 	# st.write(x)
-	with st.beta_expander("Choose Patient"):
+	with st.expander("Choose Patient"):
 		chart_type = st.selectbox("", a.metadata['Patients'])
-	with st.beta_expander("Choose Kind of Data"):
+	with st.expander("Choose Kind of Data"):
 		data_type = st.selectbox("", [a.PtDF[chart_type][key]['display'] for key in a.PtDF[chart_type].keys() ])
 if x == "mmol/L":
 	alpha = 1.0/18.0
@@ -99,19 +99,19 @@ def update_timeSliderRight():
 # min(a.getDate(str(a.reducedDF['Dates'].iloc[-1])), a.getDate(str(a.reducedDF['Dates'].iloc[1])))
 # min(datetime.min.time(), datetime.max.time())
 # with row1_2:
-with st.beta_container():
+with st.container():
 	st.title("Time Window")
 	hour_selected0 = (a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[0])), a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])))
 	hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
 
-######
-# row1_1, row1_2 = st.beta_columns((2,2))
-# with row1_1:
-# 	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-#
-# with row1_2:
-# 	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
-#############
+#####
+row1_1, row1_2 = st.columns((2,2))
+with row1_1:
+	hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
+
+with row1_2:
+	hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
+############
 
 # utc=pytz.UTC
 # hour_selected[0]
@@ -134,12 +134,12 @@ thrsAR=198
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
-	with st.beta_expander("Set thresholds"):
+	with st.expander("Set thresholds"):
 		thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
 a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
-with st.beta_container():
+with st.container():
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
 	# 	thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
@@ -253,7 +253,7 @@ def show_plot(kind: str):
 
 
 # output plots
-with st.beta_container():
+with st.container():
 	# st.text_area("Hello")
 	if x == "mg/dL":
 		show_plot(kind="altair")
@@ -289,43 +289,45 @@ def remove_timezone(df):
 	df['Dates'] = df.apply(lambda x: x['Dates'].replace(tzinfo=None), axis=1)
 	return df
 
-# @st.cache
-# def convert_df(df):
-# 	# IMPORTANT: Cache the conversion to prevent computation on every rerun
-# 	return df.to_csv().encode('utf-8')
-#
-# csv = convert_df(a.reducedDF[codes['CGM']]['df'])
-#
-# st.download_button(
-# 	label="Download data as CSV",
-# 	data=csv,
-# 	file_name='large_df.csv',
-# 	mime='text/csv',
-# )
+@st.cache
+def convert_df(df):
+	# IMPORTANT: Cache the conversion to prevent computation on every rerun
+	return df.to_csv().encode('utf-8')
+
+csv = convert_df(a.reducedDF[codes['CGM']]['df'])
+
+st.download_button(
+	label="Download data as CSV",
+	data=csv,
+	file_name='large_df.csv',
+	mime='text/csv',
+)
 
 # a.metadata['Patients']
-# chart_type = a.metadata['Patients'][0]
+# chart_type = a.metadata['Patients'][1]
 # chart_type
+# a.getWindow(ptId=chart_type, dateStart=0, dateEnd=0)
 # a.reducedDF[codes['CGM']]['df'].apply(lambda x: x['Dates'].replace(tzinfo=None), axis=1)
 
 # a.reducedDF[codes['CGM']]['df'].dropna(axis='columns').info()
 # a.reducedDF[codes['CGM']]['df'].reset_index().drop([0])
 # a.reducedDF[codes['CGM']]['df'].drop([a.reducedDF[codes['CGM']]['df'].columns[i] for i in range(41)], axis=1)
+# a.reducedDF['9059-7']['df'].columns
 
 # display data
-with st.beta_container():
+with st.container():
 
-	with st.beta_expander("See stats"):
+	with st.expander("See stats"):
 		if x == "mg/dL":
 			st.write(a.statDict)
 		else:
 			st.json(a.statDict2)
-	with st.beta_expander("See raw data"):
+	with st.expander("See raw data"):
 		st.dataframe(remove_timezone(a.reducedDF[codes['CGM']]['df']))
 
 	st.markdown(get_table_download_link(a.reducedDF[codes['CGM']]['df']), unsafe_allow_html=True)
 
-	# with st.beta_expander("More stuff"):
+	# with st.expander("More stuff"):
 	# 	if x == "mg/dL":
 	# 		show_plot(kind="CGM time series")
 	# 	else:
