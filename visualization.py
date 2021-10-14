@@ -55,7 +55,7 @@ except SystemExit as e:
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
 local_css("./utils/style.css")
-tt = 2
+
 with st.beta_container():
 	st.title("TS-Registry Visualization Tool")
 	st.header(f'(Showing dummy data from {args.date} bulk export!)')
@@ -82,6 +82,10 @@ elif x == "mg/dL":
 	alpha = 1.0
 
 a.getWindow(ptId=chart_type, dateStart=0, dateEnd=0)
+# a.reducedDF.keys()
+# a.reducedDF['440404000']['df'].info()
+# a.reducedDF['440404000']['df']['root-component-component_2-valueString']
+
 
 def update_timeSliderLeft():
 		# st.session_state.timeSlider = (datetime.combine(st.session_state.calendar1, datetime.min.time()), datetime.combine(st.session_state.calendar2, datetime.min.time()))
@@ -281,16 +285,28 @@ def get_table_download_link(df):
 	href = f'<a href="data:file/csv;base64,{b64}" download="demoDataFrame.csv">Download csv file</a>'
 	return href
 
+def remove_timezone(df):
+	df['Dates'] = df.apply(lambda x: x['Dates'].replace(tzinfo=None), axis=1)
+	return df
+# a.metadata['Patients']
+# chart_type = a.metadata['Patients'][0]
+# chart_type
+# a.reducedDF[codes['CGM']]['df'].apply(lambda x: x['Dates'].replace(tzinfo=None), axis=1)
+
+# a.reducedDF[codes['CGM']]['df'].dropna(axis='columns').info()
+# a.reducedDF[codes['CGM']]['df'].reset_index().drop([0])
+# a.reducedDF[codes['CGM']]['df'].drop([a.reducedDF[codes['CGM']]['df'].columns[i] for i in range(41)], axis=1)
 
 # display data
 with st.beta_container():
+
 	with st.beta_expander("See stats"):
 		if x == "mg/dL":
 			st.write(a.statDict)
 		else:
 			st.json(a.statDict2)
 	with st.beta_expander("See raw data"):
-		st.dataframe(a.reducedDF[codes['CGM']]['df'])
+		st.dataframe(remove_timezone(a.reducedDF[codes['CGM']]['df']))
 
 	st.markdown(get_table_download_link(a.reducedDF[codes['CGM']]['df']), unsafe_allow_html=True)
 
