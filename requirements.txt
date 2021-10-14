@@ -3,4 +3,6 @@ numpy
 matplotlib
 datetime
 seaborn
+altair
 argparse
+streamlit==1.0.0
