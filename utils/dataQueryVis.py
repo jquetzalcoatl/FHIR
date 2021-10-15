@@ -1,5 +1,5 @@
 from utils.BGriskAssesment import BGRiskAssesment
-from utils.dataTuples import codeDict, dateDict, codes, valueDict
+from utils.dataTuples import codeDict, dateDict, codes, valueDict, patientDict
 import pandas as pd
 import os
 from datetime import datetime
@@ -116,8 +116,11 @@ class dataQuery(object):
 				# print(f'No {key} in this time window')
 				pass
 
-		self.reducedDF[codes['CGM']]['df'] = self.reducedDF[codes['CGM']]['df'].rename({valueDict[codes['CGM']] : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
+		self.reducedDF[codes['CGM']]['df'] = self.reducedDF[codes['CGM']]['df'].rename({valueDict[codes['CGM']] : 'CGM', patientDict[codes['CGM']] : 'Patients'}, axis=1)
 		self.reducedDF[codes['CGM']]['df']['CGM (mmol/L)'] = self.reducedDF[codes['CGM']]['df']['CGM']/18.0
+
+		for code in codes.keys():
+			self.reducedDF[codes[code]]['df'] = self.reducedDF[codes[code]]['df'].rename({valueDict[codes[code]] : code, patientDict[codes[code]] : 'Patients'}, axis=1)
 
 		# self.reducedDF = self.PtDF[ptId][codes['CGM']]['df'][q2 and q3]
 		# self.reducedDF = self.reducedDF.rename({'root-valueQuantity-value' : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
@@ -152,6 +155,9 @@ class dataQuery(object):
 		self.reducedDF[codes['CGM']]['df'] = self.reducedDF[codes['CGM']]['df'].rename({valueDict[codes['CGM']] : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
 		self.reducedDF[codes['CGM']]['df']['CGM (mmol/L)'] = self.reducedDF[codes['CGM']]['df']['CGM']/18.0
 
+		for code in codes.keys():
+			self.reducedDF[codes[code]]['df'] = self.reducedDF[codes[code]]['df'].rename({valueDict[codes[code]] : code, patientDict[codes[code]] : 'Patients'}, axis=1)
+
 		# self.reducedDF = self.PtDF[ptId]['440404000']['df'][q2 and q3]
 		# self.reducedDF = self.reducedDF.rename({'root-valueQuantity-value' : 'CGM', 'root-subject-reference' : 'Patients'}, axis=1)
 		# self.reducedDF['CGM (mmol/L)'] = self.reducedDF['CGM']/18.0
@@ -169,7 +175,7 @@ class dataQuery(object):
 			'q25' : str(np.percentile(self.reducedDF[codes['CGM']]['df']['CGM'], 25)),
 			'q50' : str(np.percentile(self.reducedDF[codes['CGM']]['df']['CGM'], 50)),
 			'q75' : str(np.percentile(self.reducedDF[codes['CGM']]['df']['CGM'], 75)),
-			'utilizationPerc' : str(round(len(self.reducedDF[codes['CGM']]['df']['CGM'])/( ( self.getDate(str(self.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF[codes['CGM']]['df']['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ),2)),
+			'utilizationPerc' : str(round(len(self.reducedDF[codes['CGM']]['df']['CGM'])/( ( self.getDate(str(self.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])) - self.getDate(str(self.reducedDF[codes['CGM']]['df']['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ) * 100,2)),
 			'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
 			'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
 			'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),

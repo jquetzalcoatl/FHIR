@@ -9,12 +9,12 @@ import altair as alt
 import argparse
 import os
 import base64
-###
+# ##
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 from utils.load_css import local_css, textFunc, statsTextFunc
 from utils.dataQueryVis import dataQuery
-from utils.session_state import get_state
+# from utils.session_state import get_state
 from utils.dataTuples import codes
 alt.data_transformers.disable_max_rows()
 
@@ -38,14 +38,6 @@ except SystemExit as e:
 	os._exit(e.code)
 
 
-#
-
-# def setup(a: int, b: str) -> dataQuery:
-#     print('Running setup')
-#     return dataQuery(date=args.date)
-#
-# # st.server.getInstance
-# a = get_state(setup, a=3, b='bbb')
 
 # a = dataQuery(date="2021-09-22")
 # a.metadata['Patients'].append('All')
@@ -72,10 +64,10 @@ with st.sidebar:
 	if x == "mmol/L":
 		st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
 	# st.write(x)
-	with st.expander("Choose Patient"):
+	with st.expander("Choose Patient", expanded = True):
 		chart_type = st.selectbox("", a.metadata['Patients'])
-	with st.expander("Choose Kind of Data"):
-		data_type = st.selectbox("", [a.PtDF[chart_type][key]['display'] for key in a.PtDF[chart_type].keys() ])
+	# with st.expander("Choose Kind of Data"):
+	# 	data_type = st.selectbox("", [a.PtDF[chart_type][key]['display'] for key in a.PtDF[chart_type].keys() ])
 if x == "mmol/L":
 	alpha = 1.0/18.0
 elif x == "mg/dL":
@@ -134,7 +126,7 @@ thrsAR=198
 with st.sidebar:
 	# show_params = st.checkbox("Set thresholds", False)
 	# if show_params:
-	with st.expander("Set thresholds"):
+	with st.expander("Set thresholds", expanded = True):
 		thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
 		thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 		thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
@@ -145,7 +137,7 @@ with st.container():
 	# 	thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
 	# 	thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
 	# 	thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
-	st.subheader(f"Displaying:  {chart_type}")
+	st.subheader(f"Displaying:  {chart_type}  (F)")
 	st.write("")
 
 	# st.markdown(textFunc("mean",a.statDict["mean"]), unsafe_allow_html=True)
@@ -172,13 +164,36 @@ def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 # create plots
 # alt.data_transformers.disable_max_rows()
 def show_plot(kind: str):
-	reducedDF = a.reducedDF[codes['CGM']]['df'][['Dates', 'CGM', 'Patients', 'CGM (mmol/L)']].reset_index()
-	reducedDF['CGM (mg/dL)'] = reducedDF['CGM']
-	reducedDF["Dates"] = pd.to_datetime(reducedDF['Dates'])
-	st.write(kind)
+	reducedDF = {}
+
+	try:
+		reducedDF[codes['CGM']] = a.reducedDF[codes['CGM']]['df'][['Dates', 'CGM', 'Patients', 'CGM (mmol/L)']].reset_index()
+		reducedDF[codes['CGM']]['CGM (mg/dL)'] = reducedDF[codes['CGM']]['CGM']
+		reducedDF[codes['CGM']]["Dates"] = pd.to_datetime(reducedDF[codes['CGM']]['Dates'])
+	except:
+		return st.write("No CGM data.")
+
+	if kind == "insulin":
+		try:
+			reducedDF[codes['Insulin']] = a.reducedDF[codes['Insulin']]['df'][['Dates', 'Insulin', 'Patients']].reset_index()
+			# reducedDF[codes['Insulin']]['Insulin (units)'] = reducedDF[codes['CGM']]['CGM']
+			reducedDF[codes['Insulin']]["Dates"] = pd.to_datetime(reducedDF[codes['Insulin']]['Dates'])
+		except:
+			return st.write("No insulin data.")
+
+	if kind == "intake":
+		try:
+			reducedDF[codes['CarbIntake']] = a.reducedDF[codes['CarbIntake']]['df'][['Dates', 'CarbIntake', 'Patients']].reset_index()
+			reducedDF[codes['CarbIntake']]['Carbs Intake (grams)'] = reducedDF[codes['CarbIntake']]['CarbIntake']
+			reducedDF[codes['CarbIntake']]["Dates"] = pd.to_datetime(reducedDF[codes['CarbIntake']]['Dates'])
+		except:
+			return st.write("No Carb intake data.")
+
+
+
 	if kind == "CGM time series":
 		fig, ax = plt.subplots()
-		ax.set_xticklabels(reducedDF['Dates'], rotation=45)
+		ax.set_xticklabels(reducedDF[codes['CGM']]['Dates'], rotation=45)
 		ax.set_xlabel("Date")
 		ax.set_ylabel(f'CGM ({x})')
 		ll = reducedDF.shape[0]
@@ -201,45 +216,51 @@ def show_plot(kind: str):
 		ax.plot(reducedDF['Dates'], [thrsAR for i in reducedDF['Dates']], c='purple')
 		st.pyplot(fig)
 	elif kind == "CGM Histogram":
-		fig, ax = plt.subplots()
+		fig, ax = plt.subplots(figsize=(10, 10))
+		# sns.set(rc={'figure.figsize':(11.7,8.27)})
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(reducedDF['CGM'], ax=ax, kde=True, bins=b, stat="density", element="step")
+		sns.histplot(reducedDF[codes['CGM']]['CGM'], ax=ax, kde=True, bins=b, stat="density", element="step")
 		st.pyplot(fig)
 	elif kind == "CGM Histogram 2":
-		fig, ax = plt.subplots()
+		fig, ax = plt.subplots(figsize=(10, 10))
 		b = st.slider("Select number of bins", min_value=1, max_value = 100, value=10)
-		sns.histplot(reducedDF['CGM (mmol/L)'], ax=ax, kde=True, bins=b, stat="density", element="step")
+		sns.histplot(reducedDF[codes['CGM']]['CGM (mmol/L)'], ax=ax, kde=True, bins=b, stat="density", element="step")
 		st.pyplot(fig)
-	# elif kind == "Matplotlib":
-	# 	fig = Figure()
-	# 	ax = fig.subplots()
-	# 	ax.set_xticklabels(a.dates, rotation=45)
-	# 	ax.set_xlabel("Date")
-	# 	ax.set_ylabel("CGM")
-	# 	sns.lineplot(data=reducedDF.iloc[:,1:2], ax=ax, hue="event", style="event", c='red')
-	# 	# st.plotly_chart(plot, use_container_width=True)
-	# 	st.pyplot(fig)
 	elif kind == "altair":
 		st.write(a.reducedDF[codes['CGM']]['display'])
-		# df = pd.DataFrame(np.random.randn(30001, 3),columns=['a', 'b', 'c'])
-		# alt.data_transformers.disable_max_rows()
-		# reducedDF = a.reducedDF[['Dates', 'CGM', 'Patients']].reset_index()
-		# reducedDF["Dates"] = pd.to_datetime(reducedDF['Dates'])
-		# c = alt.Chart(df).mark_line(point=False).encode(alt.X('a', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('b', scale=alt.Scale(zero=False)), alt.Text('c'), tooltip=['c', 'a', 'b']).properties(width=800, height=400).interactive()
-		c = alt.Chart(reducedDF).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mg/dL)', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM (mg/dL)']).properties(width=800, height=400).interactive()
+		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mg/dL)', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM (mg/dL)']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsUL]})).mark_rule().encode(y='CGM (mg/dL)')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsBR]})).mark_rule().encode(y='CGM (mg/dL)')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsAR]})).mark_rule().encode(y='CGM (mg/dL)')
-		st.write(c + linethrsUL + linethrsBR + linethrsAR)
+		st.write(alt.layer(c + linethrsUL + linethrsBR + linethrsAR).configure_point(size=50))
 	elif kind == "altair 2":
 		st.write(a.reducedDF[codes['CGM']]['display'])
 		# reducedDF = a.reducedDF[['Dates', 'CGM (mmol/L)', 'Patients']].reset_index()
 		# reducedDF["Dates"] = pd.to_datetime(reducedDF['Dates'])
-		c = alt.Chart(reducedDF).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mmol/L)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM (mmol/L)']).properties(width=800, height=400).interactive()
+		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mmol/L)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM (mmol/L)']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsUL]})).mark_rule().encode(y='CGM (mmol/L)')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsBR]})).mark_rule().encode(y='CGM (mmol/L)')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsAR]})).mark_rule().encode(y='CGM (mmol/L)')
-		st.write(c + linethrsUL + linethrsBR + linethrsAR)
+		# st.write(c + linethrsUL + linethrsBR + linethrsAR)
+		st.write(alt.layer(c + linethrsUL + linethrsBR + linethrsAR).configure_point(size=50))
+	elif kind == "insulin":
+		st.write(a.reducedDF[codes['Insulin']]['display'])
+		c = alt.Chart(reducedDF[codes['Insulin']]).mark_line(point=True, color='#9467bd', strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('Insulin', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'Insulin']).properties(width=800, height=400).interactive().configure_point( size=200, color='#9467bd')
+		st.write(c)
+	elif kind == "intake":
+		st.write(a.reducedDF[codes['CarbIntake']]['display'])
+		c = alt.Chart(reducedDF[codes['CarbIntake']]).mark_line(point=True, strokeWidth=3, color='#e377c2').encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('Carbs Intake (grams)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'Carbs Intake (grams)']).properties(width=800, height=400).interactive().configure_point(size=200, color='#e377c2')
+		st.write(c)
+	elif kind == "allIn":
+		st.write(a.reducedDF[codes['CGM']]['display'])
+		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=False).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mg/dL)', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM (mg/dL)']).properties(width=800, height=400).interactive()
+		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsUL]})).mark_rule().encode(y='CGM (mg/dL)')
+		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsBR]})).mark_rule().encode(y='CGM (mg/dL)')
+		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsAR]})).mark_rule().encode(y='CGM (mg/dL)')
+		b = alt.Chart(reducedDF[codes['Insulin']]).mark_line(point=True, color='#57A44C').encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('Insulin', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'Insulin']).properties(width=800, height=400).interactive()
+		# st.write(c + linethrsUL + linethrsBR + linethrsAR)
+		# st.write(alt.layer(c, b).resolve_scale(y = 'independent'))
+		st.write(alt.layer(c + linethrsUL + linethrsBR + linethrsAR, b).resolve_scale(y = 'independent'))
 	# elif kind == "aggregated":
 	# 	# df = pd.DataFrame(np.random.randn(200, 3),columns=['a', 'b', 'c'])
 	# 	c = alt.Chart(a.ObsDF).mark_line(point=True).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-45), scale=alt.Scale(zero=False)), alt.Y('CGM', scale=alt.Scale(zero=False)), alt.Color('Patients', legend=None, scale=alt.Scale(domain=a.metadata['Patients'],type='ordinal')), tooltip=['Patients', 'Dates', 'CGM']).properties(width=800, height=400).interactive()
@@ -251,18 +272,35 @@ def show_plot(kind: str):
 	# 	linethrsAR = alt.Chart(pd.DataFrame({'CGM': [thrsAR]})).mark_rule().encode(y='CGM')
 	# 	st.write(c + labels + linethrsUL + linethrsBR + linethrsAR)
 
+# a.reducedDF['39543009']['display']
+# a.reducedDF['9059-7']['df']
+# a.reducedDF['9059-7']['df']['root-valueQuantity-value']
+
+# np.unique(a.reducedDF['9059-7']['df']['root-valueQuantity-code']).tolist()[0]
+# a.reducedDF['39543009']['df'].columns
+
 
 # output plots
 with st.container():
-	# st.text_area("Hello")
 	if x == "mg/dL":
 		show_plot(kind="altair")
+		show_plot(kind="insulin")
+		show_plot(kind="intake")
+
+		# show_plot(kind="allIn")
 		# show_plot(kind="CGM time series")
-		show_plot(kind="CGM Histogram")
+		row1_1, row1_2 = st.columns((2,2))
+		with row1_1:
+			show_plot(kind="CGM Histogram")
 	else:
 		show_plot(kind="altair 2")
+		show_plot(kind="insulin")
+		show_plot(kind="intake")
 		# show_plot(kind="CGM time series 2")
-		show_plot(kind="CGM Histogram 2")
+		row1_1, row1_2 = st.columns((2,2))
+		with row1_1:
+			show_plot(kind="CGM Histogram 2")
+
 
 # ss = a.reducedDF[['Dates', 'CGM', 'Patients']].reset_index()
 # ss["Dates"] = pd.to_datetime(ss['Dates'])
@@ -274,16 +312,16 @@ with st.container():
 # a.reducedDF.iloc[1:10,:]
 # plt.plot(a.reducedDF['Dates'], a.reducedDF['CGM'])
 
-def get_table_download_link(df):
-	"""Generates a link allowing the data in a given panda dataframe to be downloaded
-	in:  dataframe
-	out: href string
-	"""
-	csv = df.to_csv(index=False)
-	b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-	# href = f'<a href="data:file/csv;base64,{b64}">Download csv file</a>'
-	href = f'<a href="data:file/csv;base64,{b64}" download="demoDataFrame.csv">Download csv file</a>'
-	return href
+# def get_table_download_link(df):
+# 	"""Generates a link allowing the data in a given panda dataframe to be downloaded
+# 	in:  dataframe
+# 	out: href string
+# 	"""
+# 	csv = df.to_csv(index=False)
+# 	b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+# 	# href = f'<a href="data:file/csv;base64,{b64}">Download csv file</a>'
+# 	href = f'<a href="data:file/csv;base64,{b64}" download="demoDataFrame.csv">Download csv file</a>'
+# 	return href
 
 def remove_timezone(df):
 	df['Dates'] = df.apply(lambda x: x['Dates'].replace(tzinfo=None), axis=1)
@@ -325,7 +363,7 @@ with st.container():
 	with st.expander("See raw data"):
 		st.dataframe(remove_timezone(a.reducedDF[codes['CGM']]['df']))
 
-	st.markdown(get_table_download_link(a.reducedDF[codes['CGM']]['df']), unsafe_allow_html=True)
+	# st.markdown(get_table_download_link(a.reducedDF[codes['CGM']]['df']), unsafe_allow_html=True)
 
 	# with st.expander("More stuff"):
 	# 	if x == "mg/dL":
@@ -343,9 +381,9 @@ with st.container():
 
 		- GMI (%) = 3.31 + 0.02392 × [mean glucose in mg/dL] or GMI (mmol/mol) = 12.71 + 4.70587 × [mean glucose in mmol/L]
 
-		- For hypoglycemic risk see Refs. (1) Kovatchev, B, et al. Algorithmic Evaluation of Metabolic Control and Risk of Severe Hypoglycemia in Type 1 and Type 2 Diabetes Using Self-Monitoring Blood Glucose Data. Diabetes Technology and Therapeutics, 5(5): 817-828, 2003. (2) Clarke W, Kovatchev B. Statistical Tools to Analyze Continuous Glucose Monitor Data. Diabetes Technology & Therapeutics. 2009; 11(Suppl 1): S-45-S-54. doi:10.1089/dia.2008.0138.
-
-		- Some bugs on the synch part.
+		- For hypoglycemic risk see Refs. \n
+			(1) Kovatchev, B, et al. Algorithmic Evaluation of Metabolic Control and Risk of Severe Hypoglycemia in Type 1 and Type 2 Diabetes Using Self-Monitoring Blood Glucose Data. Diabetes Technology and Therapeutics, 5(5): 817-828, 2003.
+			(2) Clarke W, Kovatchev B. Statistical Tools to Analyze Continuous Glucose Monitor Data. Diabetes Technology & Therapeutics. 2009; 11(Suppl 1): S-45-S-54. doi:10.1089/dia.2008.0138.
 
 		Made by [JQTM](https://github.com/jquetzalcoatl).
 
