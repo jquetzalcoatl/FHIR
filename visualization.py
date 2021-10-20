@@ -227,8 +227,8 @@ def show_plot(kind: str):
 		sns.histplot(reducedDF[codes['CGM']]['CGM (mmol/L)'], ax=ax, kde=True, bins=b, stat="density", element="step")
 		st.pyplot(fig)
 	elif kind == "altair":
-		st.write(a.reducedDF[codes['CGM']]['display'])
-		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mg/dL)', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM (mg/dL)']).properties(width=800, height=400).interactive()
+		st.write(a.reducedDF[codes['CGM']]['display'])#mark_circle()
+		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-30), scale=alt.Scale(zero=False)), alt.Y('CGM (mg/dL)', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'CGM (mg/dL)']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsUL]})).mark_rule().encode(y='CGM (mg/dL)')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsBR]})).mark_rule().encode(y='CGM (mg/dL)')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mg/dL)': [thrsAR]})).mark_rule().encode(y='CGM (mg/dL)')
@@ -237,7 +237,7 @@ def show_plot(kind: str):
 		st.write(a.reducedDF[codes['CGM']]['display'])
 		# reducedDF = a.reducedDF[['Dates', 'CGM (mmol/L)', 'Patients']].reset_index()
 		# reducedDF["Dates"] = pd.to_datetime(reducedDF['Dates'])
-		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('CGM (mmol/L)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM (mmol/L)']).properties(width=800, height=400).interactive()
+		c = alt.Chart(reducedDF[codes['CGM']]).mark_line(point=True, strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-30), scale=alt.Scale(zero=False)), alt.Y('CGM (mmol/L)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'CGM (mmol/L)']).properties(width=800, height=400).interactive()
 		linethrsUL = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsUL]})).mark_rule().encode(y='CGM (mmol/L)')
 		linethrsBR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsBR]})).mark_rule().encode(y='CGM (mmol/L)')
 		linethrsAR = alt.Chart(pd.DataFrame({'CGM (mmol/L)': [thrsAR]})).mark_rule().encode(y='CGM (mmol/L)')
@@ -245,11 +245,11 @@ def show_plot(kind: str):
 		st.write(alt.layer(c + linethrsUL + linethrsBR + linethrsAR).configure_point(size=50))
 	elif kind == "insulin":
 		st.write(a.reducedDF[codes['Insulin']]['display'])
-		c = alt.Chart(reducedDF[codes['Insulin']]).mark_line(point=True, color='#9467bd', strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('Insulin', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'Insulin']).properties(width=800, height=400).interactive().configure_point( size=200, color='#9467bd')
+		c = alt.Chart(reducedDF[codes['Insulin']]).mark_line(interpolate='step-after', color='#9467bd', strokeWidth=3).encode(alt.X('Dates', axis=alt.Axis(labelAngle=-30), scale=alt.Scale(zero=False)), alt.Y('Insulin', scale=alt.Scale(zero=False)), alt.Text('Patients'), tooltip=['Patients', 'Dates', 'Insulin']).properties(width=800, height=400).interactive().configure_point( size=200, color='#9467bd')
 		st.write(c)
 	elif kind == "intake":
 		st.write(a.reducedDF[codes['CarbIntake']]['display'])
-		c = alt.Chart(reducedDF[codes['CarbIntake']]).mark_line(point=True, strokeWidth=3, color='#e377c2').encode(alt.X('Dates', axis=alt.Axis(labelAngle=0), scale=alt.Scale(zero=False)), alt.Y('Carbs Intake (grams)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'Carbs Intake (grams)']).properties(width=800, height=400).interactive().configure_point(size=200, color='#e377c2')
+		c = alt.Chart(reducedDF[codes['CarbIntake']]).mark_line(point=True, strokeWidth=3, color='#e377c2').encode(alt.X('Dates', axis=alt.Axis(labelAngle=-30), scale=alt.Scale(zero=False)), alt.Y('Carbs Intake (grams)', scale=alt.Scale(zero=False)), tooltip=['Patients', 'Dates', 'Carbs Intake (grams)']).properties(width=800, height=400).interactive().configure_point(size=200, color='#e377c2')
 		st.write(c)
 	elif kind == "allIn":
 		st.write(a.reducedDF[codes['CGM']]['display'])
