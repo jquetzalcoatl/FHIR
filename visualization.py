@@ -149,7 +149,6 @@ with st.container():
 		st.markdown(statsTextFunc(a.statDict2), unsafe_allow_html=True)
 
 
-
 def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 	if x < thrsUL:
 		return 'red'
@@ -160,6 +159,11 @@ def coloring(x, thrsUL=55, thrsBR=80, thrsAR=200):
 	else:
 		return 'red'
 
+def plotGMIPred(x0, dx=3.0, step=0.1, sd=0.784):
+	GMIPred =pd.DataFrame(data = {"GMI" : [x for x in np.arange(x0-dx,x0+dx,step)], "Probability" : [1/np.sqrt(2*np.pi*np.power(sd, 2)) * np.exp(-np.power(x-x0,2)/(2*np.power(sd, 2))) for x in np.arange(x0-dx,x0+dx,step)]})
+	st.write("Probabilistic GMI") #.mark_line(point=True, strokeWidth=3, color='#e377c2')
+	c = alt.Chart(GMIPred).mark_area(color='#e377c2').encode(alt.X('GMI', axis=alt.Axis(labelAngle=-0), scale=alt.Scale(zero=False)), alt.Y('Probability', scale=alt.Scale(zero=False)), tooltip=['GMI', 'Probability']).properties(width=800, height=400).interactive().configure_point(size=200, color='#e377c2')
+	st.write(c)
 # a.reducedDF['CGM (mmol/L)']
 # create plots
 # alt.data_transformers.disable_max_rows()
@@ -286,7 +290,7 @@ with st.container():
 		show_plot(kind="altair")
 		show_plot(kind="insulin")
 		show_plot(kind="intake")
-
+		plotGMIPred(float(a.statDict["GMI"]))
 		# show_plot(kind="allIn")
 		# show_plot(kind="CGM time series")
 		row1_1, row1_2 = st.columns((2,2))
@@ -296,6 +300,7 @@ with st.container():
 		show_plot(kind="altair 2")
 		show_plot(kind="insulin")
 		show_plot(kind="intake")
+		plotGMIPred(float(a.statDict["GMI"]))
 		# show_plot(kind="CGM time series 2")
 		row1_1, row1_2 = st.columns((2,2))
 		with row1_1:
