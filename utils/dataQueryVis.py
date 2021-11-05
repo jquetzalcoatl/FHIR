@@ -18,7 +18,7 @@ utc=pytz.UTC
 # b = dataQuery(date='2021-09-22')
 # np.unique(b.dfResDict['MedicationAdministration']['root-medicationCodeableConcept-coding-coding_0-code'])#['root-subject-reference'])#.keys()#['Observation']
 # b.dfCodeDict
-# b.PtDF.keys()
+# b.PtDF['Patient/2023']['440404000']['display']
 # b.PtDF.keys()#['9059-7']['df']['root-valueQuantity-code']
 # 'root-valueQuantity-value' '9059-7'
 # b.PtDF['Patient/460111']['39543009']['df']#.keys()

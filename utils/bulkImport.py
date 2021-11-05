@@ -1,4 +1,5 @@
 import requests
+# from requests.auth import HTTPBasicAuth
 import json
 import numpy as np
 import pandas as pd
@@ -7,10 +8,24 @@ import time
 import os
 import logging
 import sys
+from utils.tokens import tokens as tok
+###
+# os.getcwd()
+# os.chdir(os.path.join(os.getcwd(), "FHIR"))
 
 # PATH = "https://trustsphere.demo.smilecdr.com/fhir-request/Observation?code=440404000&subject=Patient/292046&date=lt2021-05-30T00:00:00Z&date=gt2021-05-15T00:00:00Z"
 # PATH = "https://trustsphere.demo.smilecdr.com/fhir-request/$export?_since=2021-05-29T00:00:00Z"
 # requests.get('https://api.github.com/user', auth=('user', 'pass'))
+# Making a get request
+# response = requests.get('https://api.github.com / user, ', auth = HTTPBasicAuth('user', 'pass'))
+
+# date = "2021-05-29"
+# group_id="CONSENT-GIVEN-GROUP"
+# path = "http://trustsphere.demo.smilecdr.com/fhir-request/Group/" + group_id + "/$export?_since=" + date + "T00:00:00Z"
+# path = "http://trustsphere.demo.smilecdr.com/fhir-request" + "/$export?_since=" + date + "T00:00:00Z"
+# BulkRequest = requests.get(path, headers={"Prefer" : "respond-async"})
+# BulkRequestHeaderDict = dict(BulkRequest.headers)
+# BulkRequestHeaderDict
 
 class bulkImport(object):
 	def __init__(self, date = "2021-05-29", group_id="CONSENT-GIVEN-GROUP", MAX=3):
@@ -50,7 +65,8 @@ class bulkImport(object):
 			self.logging.info('bulkImport - Binaries Loaded!')
 
 	def getBinaryLinks(self):
-		self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"})
+		# self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"})
+		self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"}, auth=(tok["username"], tok["pwd"]))
 		self.BulkRequestHeaderDict = dict(self.BulkRequest.headers)
 		self.binariesRequest = requests.get(self.BulkRequestHeaderDict['Content-Location'])
 
