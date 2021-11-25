@@ -10,7 +10,7 @@ import argparse
 import os
 import base64
 import sys
-
+print(os.getcwd())
 sys.path.insert(1, os.getcwd() + '/FHIR')
 # ##
 # os.getcwd()
