@@ -2,7 +2,7 @@ from utils.BGriskAssesment import BGRiskAssesment
 from utils.dataTuples import codeDict, dateDict, codes, valueDict, patientDict
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import numpy as np
 import json
 import pytz
@@ -33,17 +33,19 @@ utc=pytz.UTC
 
 class dataQuery(object):
 	def __init__(self, date='2021-09-10', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		self.metadata = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Metadata.json')
-		# self.metadata = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'AggDataDict.json')
-		self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Data.json')
-		# self.ObsDF = pd.read_csv(os.path.join(os.getcwd(), 'Complete-' + date, 'Observation.csv'))
+		# self.metadata = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Metadata.json')
+		self.metadata = self.loadJSON(os.path.join("..", 'Complete-' + date), 'Metadata.json')
+		# self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Data.json')
+		self.dataDict = self.loadJSON(os.path.join("..", 'Complete-' + date), 'Data.json')
 
-		fileList = os.listdir(os.path.join(os.getcwd(), f'Complete-{date}'))
+		# fileList = os.listdir(os.path.join(os.getcwd(), f'Complete-{date}'))
+		fileList = os.listdir(os.path.join("..", f'Complete-{date}'))
 		fLBool = [file.split(".")[1] == "csv" for file in fileList ]
 		resList = [ file.split(".")[0] for i,file in enumerate(fileList) if fLBool[i] == True ]
 		self.dfResDict = {}
 		for key in resList:
-			self.dfResDict[key] = pd.read_csv(os.path.join(os.getcwd(), 'Complete-' + date, f'{key}.csv'))
+			# self.dfResDict[key] = pd.read_csv(os.path.join(os.getcwd(), 'Complete-' + date, f'{key}.csv'))
+			self.dfResDict[key] = pd.read_csv(os.path.join("..", 'Complete-' + date, f'{key}.csv'))
 			try:
 				self.dfResDict[key]['Dates'] = self.dfResDict[key].apply(lambda x : self.getDate(str(x[dateDict[key]])), axis=1)
 			except:
@@ -221,6 +223,122 @@ class dataQuery(object):
 			'CoeffVariation' : str(round(np.std(self.reducedDF[codes['CGM']]['df']['CGM'])/np.mean(self.reducedDF[codes['CGM']]['df']['CGM']),2)),
 			'GMI' : str(round(np.mean(self.reducedDF[codes['CGM']]['df']['CGM']) * 0.02392 + 3.31, 2)),
 			}
+
+
+class Stat(dataQuery):
+	def __init__(self, date='2021-09-10', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+		super(Stat, self).__init__(date=date, ptId=ptId, dateStart=dateStart, dateEnd=dateEnd, thrsUL=thrsUL, thrsBR=thrsBR, thrsAR=thrsAR)
+
+	def createReducedDF(self, numdays):
+		for pt in self.PtDF.keys():
+			for code in self.PtDF[pt].keys():
+				try:
+					initime = self.PtDF[pt][code]['df']['Dates'].max() - timedelta(days=numdays)
+					self.PtDF[pt][code]['dfReduced'] = self.PtDF[pt][code]['df'][self.PtDF[pt][code]['df']['Dates'] > initime]
+				except:
+					pass
+			try:
+				self.PtDF[pt][codes['CGM']]['dfReduced'] = self.PtDF[pt][codes['CGM']]['dfReduced'].rename({valueDict[codes['CGM']] : 'CGM', patientDict[codes['CGM']] : 'Patients'}, axis=1)
+				self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)'] = self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']/18.0
+				for code in codes.keys():
+					self.PtDF[pt][codes[code]]['dfReduced'] = self.PtDF[pt][codes[code]]['dfReduced'].rename({valueDict[codes[code]] : code, patientDict[codes[code]] : 'Patients'}, axis=1)
+
+			except:
+				pass
+
+	def addStats(self, thrsUL=55, thrsBR=80, thrsAR=200):
+		for pt in self.PtDF.keys():
+			self.PtDF[pt][codes['CGM']]['stats'] ={
+				'units' : "mg/dL",
+				'mean' : str(round(np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']),2)),
+				'median' : str(np.median(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'min' : str(np.min(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'max' : str(np.max(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'var' : str(round(np.var(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']),2)),
+				'std' : str(round(np.std(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']),2)),
+				'sum' : str(np.sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'q25' : str(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'], 25)),
+				'q50' : str(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'], 50)),
+				'q75' : str(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'], 75)),
+				'utilizationPerc' : str(round(len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])/( ( self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[-1])) - self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 ) * 100, 2)),
+				'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
+				'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
+				'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
+				'nDays' : str(int(np.floor( (self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[-1])) - self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[0]))).total_seconds()/3600 * 1/24 + 1 ))),
+				'nValues' : str(len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'nUrgentLow' : str(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsUL)),
+				'nBelowRange' : str(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsUL) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsBR))),
+				'nInRange' : str(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsBR) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsAR))),
+				'nAboveRange' : str(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsAR)),
+				'PerUrgentLow' : str(round(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsUL)/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerBelowRange' : str(round(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsUL) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsBR))/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerInRange' : str(round(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsBR) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsAR))/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerAboveRange' : str(round(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsAR)/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'CoeffVariation' : str(round(np.std(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])/np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']),2)),
+				'GMI' : str(round(np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']) * 0.02392 + 3.31, 2)),
+				}
+			self.PtDF[pt][codes['CGM']]['stats2'] ={
+				'units' : "mmol/L",
+				'mean' : str(round(np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'median' : str(round(np.median(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),3)),
+				'min' : str(round(np.min(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'max' : str(round(np.max(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'var' : str(round(np.var(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'std' : str(round(np.std(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'sum' : str(round(np.sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)']),2)),
+				'q25' : str(round(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)'], 25),2)),
+				'q50' : str(round(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)'], 50),2)),
+				'q75' : str(round(np.percentile(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM (mmol/L)'], 75),2)),
+				'utilizationPerc' : str(round(len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])/( ( self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[-1])) - self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[0]))).total_seconds()/60 * 1/5 + 1 )*100, 2)),
+				'hypoRisk' : self.BGRiskAssesment.LBGRisk(),
+				'LowBGIndex' : str(round(self.BGRiskAssesment.LBGI,3)),
+				'HighBGIndex' : str(round(self.BGRiskAssesment.HBGI,3)),
+				'nDays' : str(int(np.floor( (self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[-1])) - self.getDate(str(self.PtDF[pt][codes['CGM']]['dfReduced']['Dates'].iloc[0]))).total_seconds()/3600 * 1/24 + 1 ))),
+				'nValues' : str(len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])),
+				'nUrgentLow' : str(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsUL)),
+				'nBelowRange' : str(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsUL) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsBR))),
+				'nInRange' : str(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsBR) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsAR))),
+				'nAboveRange' : str(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsAR)),
+				'PerUrgentLow' : str(round(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsUL)/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerBelowRange' : str(round(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsUL) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsBR))/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerInRange' : str(round(sum((self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsBR) & (self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] < thrsAR))/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'PerAboveRange' : str(round(sum(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'] >= thrsAR)/len(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])*100,2)),
+				'CoeffVariation' : str(round(np.std(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM'])/np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']),2)),
+				'GMI' : str(round(np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']) * 0.02392 + 3.31, 2)),
+				}
+
+	def genTmpDf(self, ndayList = [7,14,21]):
+		df = {}
+		for nDays in ndayList:
+			self.createReducedDF(nDays)
+			self.addStats()
+			df[str(nDays)] = {"df" : pd.concat([self.PtDF[pt][codes['CGM']]['dfReduced'] for pt in self.PtDF.keys()], ignore_index=True)}
+			# , "stats" : [{pt : self.PtDF[pt][codes['CGM']]['stats']} for pt in self.PtDF.keys()]}
+			df[str(nDays)]['stats'] = {}
+			for pt in self.PtDF.keys():
+				df[str(nDays)]['stats'][pt] = self.PtDF[pt][codes['CGM']]['stats']
+		return df
+
+	def makeStatsDf(self, tmpDF):
+		nDays = next(iter(tmpDF))
+		pt = next(iter(tmpDF[nDays]['stats']))
+		statsDF = pd.DataFrame(columns = list(tmpDF[nDays]['stats'][pt].keys()))
+		statsDF['Patients'] = []
+		statsDF['timeWindow'] = []
+		for nDay in tmpDF.keys():
+			for pt in tmpDF[nDay]['stats'].keys():
+
+				aa = pd.DataFrame.from_dict(tmpDF[nDay]['stats'][pt], orient='index').T
+				aa['Patients'] = pt
+				aa['timeWindow'] = nDay
+
+				statsDF = pd.concat([statsDF, aa])
+				# statsDF.append(aa)
+		return statsDF
+
+	def getStatsDf(self, ndayList = [7,14,21]):
+		self.tmpDF = self.genTmpDf(ndayList)
+		self.tmp = self.makeStatsDf(self.tmpDF)
 
 if __name__ == '__main__':
 	dataQuery(date='2021-07-28')

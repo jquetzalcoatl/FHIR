@@ -19,14 +19,6 @@ from utils.tokens import tokens as tok
 # Making a get request
 # response = requests.get('https://api.github.com / user, ', auth = HTTPBasicAuth('user', 'pass'))
 
-# date = "2021-05-29"
-# group_id="CONSENT-GIVEN-GROUP"
-# path = "http://trustsphere.demo.smilecdr.com/fhir-request/Group/" + group_id + "/$export?_since=" + date + "T00:00:00Z"
-# path = "http://trustsphere.demo.smilecdr.com/fhir-request" + "/$export?_since=" + date + "T00:00:00Z"
-# BulkRequest = requests.get(path, headers={"Prefer" : "respond-async"})
-# BulkRequestHeaderDict = dict(BulkRequest.headers)
-# BulkRequestHeaderDict
-
 class bulkImport(object):
 	def __init__(self, date = "2021-05-29", group_id="CONSENT-GIVEN-GROUP", MAX=3):
 		'''
@@ -34,28 +26,17 @@ class bulkImport(object):
 			pull and parse all the data since then concerning Observations,
 			MedicationAdministration, Patients, etc.
 
-			While the data we're after are the previously mentioned. There are
-			several by-products. All by-products are also parsed as JSON and
-			saved in a directory named "TS-BulkExport-DATE".
+			All the data is saved in "TS-BulkExport-<DATE>".
 
-			This object initializes a path variable that is going to be feed
-			to requests.get for the bulk export. The date since for the bulk
-			export can be given as an input. There are as many lists
-			as resources, i.e., Obs => Observations,
-			Meds => MedicationAdministration, Patients => Patient.
+			This object initializes a path variable that is going to be fed
+			to requests.get for the bulk export. The date <since> for the bulk
+			export can be given as an input.
 		'''
 
 		self.dt = str(datetime.now()).split(' ')[0]
 		self.path = "https://trustsphere.demo.smilecdr.com/fhir-request/$export?_since=" + date + "T00:00:00Z"
 		# self.path = "http://trustsphere.demo.smilecdr.com/fhir-request/Group/" + group_id + "/$export?_since=" + date + "T00:00:00Z"
 		self.pathToDump = 'TS-BulkExport-' + self.dt
-		# self.Obs = []
-		# self.Group = []
-		# self.Meds = []
-		# self.Patients = []
-		# self.CodeSystem = []
-		# self.Questionnaire = []
-		# self.QuestionnaireResponse = []
 
 		# PUT -> server consent w/o and participants
 		self.logFunc()
@@ -103,7 +84,6 @@ class bulkImport(object):
 			except:
 				self.logging.warning(f'bulkImport - Binary with index {i} was not loaded.')
 
-		# self.typeOfResources = list(np.unique([self.binariesRequestDict['output'][i]['type'] for i in range(len(self.binariesRequestDict['output']))]))
 		self.logging.info(f'type of resources: {self.typeOfResources}')
 		self.logging.info(f'bulkImport - \n')
 		for key in self.resources.keys():
