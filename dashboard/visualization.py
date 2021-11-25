@@ -12,6 +12,7 @@ import base64
 import sys
 
 sys.path.insert(1, '../')
+sys.path.insert(1, '/app/fhir/')
 # ##
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
