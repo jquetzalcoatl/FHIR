@@ -11,17 +11,17 @@ import os
 import base64
 import sys
 
-sys.path.insert(1, '../')
+from pathlib import Path
+
+sys.path.insert(1, Path(os.getcwd()).parent.absolute())
 sys.path.insert(1, '/app/fhir/')
 # ##
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
 from utils.load_css import local_css, textFunc, statsTextFunc
 from utils.dataQueryVis import dataQuery, Stat
-# from utils.session_state import get_state
 from utils.dataTuples import codes
 alt.data_transformers.disable_max_rows()
-
 
 
 # $streamlit run visualization.py -- --date 2021-09-22
@@ -50,11 +50,12 @@ except SystemExit as e:
 # can only set this once, first thing to set
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
-local_css("utils/style.css")
+local_css("../utils/style.css")
 
 with st.container():
 	st.title("TS-Registry Visualization Tool")
 	st.header(f'(Showing dummy data from {args.date} bulk export!)')
+	st.write(f'{os.getcwd()}')
 
 @st.cache(allow_output_mutation=True)
 def loadData():
@@ -420,119 +421,67 @@ if option == "Aggregated Level":
 		return Stat(date=args.date)
 	a = loadData()
 
-	alpha = 1.0
+	a.getWindow(ptId=0, dateStart=0, dateEnd=0)
+	# st.checkbox(st.expander("Text"))
+	def ptCheckbox():
+		ar = {}
+		row1, row2 = st.columns((2,2))
+		for i,key in enumerate(a.statDF.keys()):
+			if key != "units" and key != "Patients":
+				if i < len(a.statDF.keys())/2:
+					with row1:
+						ar[key] = st.checkbox(key)
+				else:
+					with row2:
+						ar[key] = st.checkbox(key)
+		return ar
+
+
 	with st.sidebar:
-		x = st.radio("Select units:", ("mg/dL", "mmol/L"))
-		if x == "mmol/L":
-			st.warning('Measurements are done in mg/dL and then converted to mmol/L.')
-		# st.write(x)
-		with st.expander("Choose Patient", expanded = True):
-			chart_type = st.selectbox("", a.metadata['Patients'])
-		# with st.expander("Choose Kind of Data"):
-		# 	data_type = st.selectbox("", [a.PtDF[chart_type][key]['display'] for key in a.PtDF[chart_type].keys() ])
-	if x == "mmol/L":
-		alpha = 1.0/18.0
-	elif x == "mg/dL":
+		options = st.multiselect(
+			'Select time windows (days)',
+			(7,14,21), (7))
+
+	a.getStatsDf(ndayList = options)
+
+	with st.sidebar:
+		st.write("Select Plots:")
+		ar = ptCheckbox()
 		alpha = 1.0
-
-	a.getWindow(ptId=chart_type, dateStart=0, dateEnd=0)
-	a.getStatsDf(ndayList = [7,14,21])
-
-
-	def update_timeSliderLeft():
-			# st.session_state.timeSlider = (datetime.combine(st.session_state.calendar1, datetime.min.time()), datetime.combine(st.session_state.calendar2, datetime.min.time()))
-		st.session_state.timeSlider = (datetime.combine(st.session_state.calendar1, datetime.min.time()), st.session_state.timeSlider[1])
-
-	def update_timeSliderRight():
-		st.session_state.timeSlider = (st.session_state.timeSlider[0], datetime.combine(st.session_state.calendar2, datetime.min.time()) )
-
-	# a.getDate(str(a.reducedDF['Dates'].iloc[-1])).time()
-	# datetime.min.time()
-	# min(a.getDate(str(a.reducedDF['Dates'].iloc[-1])), a.getDate(str(a.reducedDF['Dates'].iloc[1])))
-	# min(datetime.min.time(), datetime.max.time())
-	# with row1_2:
-	with st.container():
-		st.title("Time Window")
-		hour_selected0 = (a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[0])), a.getDate(str(a.reducedDF[codes['CGM']]['df']['Dates'].iloc[-1])))
-		hour_selected = st.slider("Select Time Window", key='timeSlider', value=hour_selected0, min_value=hour_selected0[0], max_value=hour_selected0[1])
-
-	#####
-	row1_1, row1_2 = st.columns((2,2))
-	with row1_1:
-		hour_s0 = st.date_input("Start date", value = hour_selected[0], key='calendar1', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderLeft)
-
-	with row1_2:
-		hour_s1 = st.date_input("End date", value = hour_selected[1], key='calendar2', min_value=hour_selected0[0], max_value=hour_selected0[1], on_change=update_timeSliderRight)
-	############
-
-
-	a.getWindow3(ptId=chart_type, dateStart=hour_selected[0], dateEnd=hour_selected[1])
-	thrsUL=54
-	thrsBR=72
-	thrsAR=198
-	# a.getStats(thrsUL=55, thrsBR=80, thrsAR=200)
-	# a.reducedDF.columns
-
-	with st.sidebar:
-		# show_params = st.checkbox("Set thresholds", False)
-		# if show_params:
 		with st.expander("Set thresholds", expanded = True):
 			thrsUL = st.slider("Select urgently low threshold", min_value=0.0, max_value = 396 * alpha, value=54 * alpha, step = alpha)
 			thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1 * alpha, max_value = 396 * alpha, value=thrsUL+18 * alpha, step = alpha)
 			thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
-	a.getStats(thrsUL=thrsUL * 1/alpha, thrsBR=thrsBR * 1/alpha, thrsAR=thrsAR * 1/alpha)
-	with st.container():
-		# show_params = st.checkbox("Set thresholds", False)
-		# if show_params:
-		# 	thrsUL = st.slider("Select urgently low threshold", min_value=0, max_value = 400, value=55)
-		# 	thrsBR = st.slider("Select below range threshold", min_value=thrsUL+1, max_value = 400, value=thrsUL+25)
-		# 	thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1, max_value = 400, value=thrsBR+120)
-		st.subheader(f"Displaying:  {chart_type}  (F)")
-		st.write("")
-
-		# st.markdown(textFunc("mean",a.statDict["mean"]), unsafe_allow_html=True)
-		# st.button("Here")
-		if x == "mg/dL":
-			# st.write(a.statDict)
-			st.markdown(statsTextFunc(a.statDict), unsafe_allow_html=True)
-		else:
-			st.markdown(statsTextFunc(a.statDict2), unsafe_allow_html=True)
 
 
-	def plottest():
-		fig, ax = plt.subplots(figsize=(10, 10))
-		# ax = sns.boxplot(data=tmpDF['7']["df"], x='Patients', y='CGM', palette='Set2', linewidth=2.5)
-		# ax = sns.boxplot(data=tmpDF['14']["df"], x='Patients', y='CGM', palette='Set2', linewidth=2.5)
-		# ax =
-		sns.violinplot(x='Patients', y='CGM', data=a.tmpDF['21']['df'], scale='width', inner='quartile')
-		# ax = sns.violinplot(x='Patients', y='CGM', data=a.tmpDF['7']['df'], scale='width', inner='quartile')
-		sns.violinplot(x='Patients', y='CGM', data=a.tmpDF['7']['df'], scale='width', inner='quartile')
-		# ax.set(title='Boxplot', xlabel='', ylabel='Height (cm)')
+	a.getStatsDf(ndayList = options)
+	def plotAgg():
+		fig, ax = plt.subplots(figsize=(7, 7))
+		s = len(a.ptAggReducedDF.keys())
+		alpha=0
+		for i,key in enumerate(a.ptAggReducedDF.keys()):
+			ax = sns.violinplot(x='Patients', y='CGM', data=a.ptAggReducedDF[key]['df'], scale='width', inner='quartile', saturation=0.7)
+			alpha = 0.4
+			for violin in ax.collections[::2]:
+				violin.set_alpha(alpha)
+			# ax.set(title='Boxplot', xlabel='', ylabel='Height (cm)')
 		st.pyplot(fig)
 		# plt.show()
 
+	def plotStats():
+		fig, ax = plt.subplots(figsize=(7, 7))
+		for key in ar.keys():
+			if ar[key] == True:
+				st.pyplot(sns.catplot(x="Patients", y=key, hue="timeWindow", kind="swarm", data=a.statDF, s=15))
+
 	# output plots
 	with st.container():
-		plottest()
-		# if x == "mg/dL":
-		# 	show_plot(kind="altair")
-		# 	show_plot(kind="insulin")
-		# 	show_plot(kind="intake")
-		# 	plotGMIPred(float(a.statDict["GMI"]))
-		# 	# show_plot(kind="allIn")
-		# 	# show_plot(kind="CGM time series")
-		# 	row1_1, row1_2 = st.columns((2,2))
-		# 	with row1_1:
-		# 		show_plot(kind="CGM Histogram")
-		# else:
-		# 	show_plot(kind="altair 2")
-		# 	show_plot(kind="insulin")
-		# 	show_plot(kind="intake")
-		# 	plotGMIPred(float(a.statDict["GMI"]))
-		# 	# show_plot(kind="CGM time series 2")
-		# 	row1_1, row1_2 = st.columns((2,2))
-		# 	with row1_1:
-		# 		show_plot(kind="CGM Histogram 2")
+		row1, row2 = st.columns((2,2))
+		with row1:
+			plotAgg()
+			plotStats()
+		# with row2:
+			# st.pyplot(sns.catplot(x="Patients", y="GMI", hue="timeWindow", kind="swarm", data=a.statDF, s=15))
 
 
 	def remove_timezone(df):
@@ -557,10 +506,11 @@ if option == "Aggregated Level":
 	with st.container():
 
 		with st.expander("See stats"):
-			if x == "mg/dL":
-				st.write(a.statDict)
-			else:
-				st.json(a.statDict2)
+			pass
+			# if x == "mg/dL":
+			# 	st.write(a.statDict)
+			# else:
+			# 	st.json(a.statDict2)
 		with st.expander("See raw data"):
 			st.dataframe(remove_timezone(a.reducedDF[codes['CGM']]['df']))
 

@@ -8,44 +8,27 @@ import json
 import pytz
 utc=pytz.UTC
 
-# os.getcwd()
-# os.chdir(os.path.join(os.getcwd(), "FHIR"))
-
-# # codeDict = {'Observation' : 'root-code-coding-coding_0-code', 'MedicationAdministration' : 'root-medicationCodeableConcept-coding-coding_0-code'}
-# # dateDict = {'Observation' : 'root-effectiveDateTime', 'MedicationAdministration' : 'root-effectiveDateTime', 'Consent' : 'root-dateTime'}
-#
-
-# b = dataQuery(date='2021-09-22')
-# np.unique(b.dfResDict['MedicationAdministration']['root-medicationCodeableConcept-coding-coding_0-code'])#['root-subject-reference'])#.keys()#['Observation']
-# b.dfCodeDict
-# b.PtDF['Patient/2023']['440404000']['display']
-# b.PtDF.keys()#['9059-7']['df']['root-valueQuantity-code']
-# 'root-valueQuantity-value' '9059-7'
-# b.PtDF['Patient/460111']['39543009']['df']#.keys()
-# b.PtDF['Patient/460111']['9059-7']['df']#.columns#['root-valueQuantity-value']
-# # b.PtDF['Patient/2023']["9059-7"]['df']
-# b.dfCodeDict['39543009']['df']['root-dosage-dose-code']
-# b.reducedDF['39543009']['df']
-
-
-
+from pathlib import Path
+# path = Path("/here/your/path/file/")
+# print(path.parent.absolute())
 
 
 class dataQuery(object):
 	def __init__(self, date='2021-09-10', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
+		parentDir = Path(os.getcwd()).parent.absolute()
 		# self.metadata = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Metadata.json')
-		self.metadata = self.loadJSON(os.path.join("..", 'Complete-' + date), 'Metadata.json')
+		self.metadata = self.loadJSON(os.path.join(parentDir, 'Complete-' + date), 'Metadata.json')
 		# self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Data.json')
-		self.dataDict = self.loadJSON(os.path.join("..", 'Complete-' + date), 'Data.json')
+		self.dataDict = self.loadJSON(os.path.join(parentDir, 'Complete-' + date), 'Data.json')
 
 		# fileList = os.listdir(os.path.join(os.getcwd(), f'Complete-{date}'))
-		fileList = os.listdir(os.path.join("..", f'Complete-{date}'))
+		fileList = os.listdir(os.path.join(parentDir, f'Complete-{date}'))
 		fLBool = [file.split(".")[1] == "csv" for file in fileList ]
 		resList = [ file.split(".")[0] for i,file in enumerate(fileList) if fLBool[i] == True ]
 		self.dfResDict = {}
 		for key in resList:
 			# self.dfResDict[key] = pd.read_csv(os.path.join(os.getcwd(), 'Complete-' + date, f'{key}.csv'))
-			self.dfResDict[key] = pd.read_csv(os.path.join("..", 'Complete-' + date, f'{key}.csv'))
+			self.dfResDict[key] = pd.read_csv(os.path.join(parentDir, 'Complete-' + date, f'{key}.csv'))
 			try:
 				self.dfResDict[key]['Dates'] = self.dfResDict[key].apply(lambda x : self.getDate(str(x[dateDict[key]])), axis=1)
 			except:
@@ -327,18 +310,22 @@ class Stat(dataQuery):
 		statsDF['timeWindow'] = []
 		for nDay in tmpDF.keys():
 			for pt in tmpDF[nDay]['stats'].keys():
-
 				aa = pd.DataFrame.from_dict(tmpDF[nDay]['stats'][pt], orient='index').T
 				aa['Patients'] = pt
 				aa['timeWindow'] = nDay
 
 				statsDF = pd.concat([statsDF, aa])
 				# statsDF.append(aa)
+		for column in statsDF.columns:
+			try:
+				statsDF[column] = pd.to_numeric(statsDF[column])
+			except:
+				pass
 		return statsDF
 
 	def getStatsDf(self, ndayList = [7,14,21]):
-		self.tmpDF = self.genTmpDf(ndayList)
-		self.tmp = self.makeStatsDf(self.tmpDF)
+		self.ptAggReducedDF = self.genTmpDf(ndayList)
+		self.statDF = self.makeStatsDf(self.ptAggReducedDF)
 
 if __name__ == '__main__':
 	dataQuery(date='2021-07-28')
