@@ -19,7 +19,8 @@ from dataTuples import codeDict, dateDict, codes, valueDict, patientDict
 
 class dataQuery(object):
 	def __init__(self, date='2021-09-10', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):
-		parentDir = Path(os.getcwd()).parent.absolute()
+		# parentDir = Path(os.getcwd()).parent.absolute()
+		parentDir = os.getcwd()
 		# self.metadata = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Metadata.json')
 		self.metadata = self.loadJSON(os.path.join(parentDir, 'Complete-' + date), 'Metadata.json')
 		# self.dataDict = self.loadJSON(os.path.join(os.getcwd(), 'Complete-' + date), 'Data.json')
