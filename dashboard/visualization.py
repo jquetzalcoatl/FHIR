@@ -12,9 +12,10 @@ import base64
 import sys
 
 from pathlib import Path
-
-sys.path.insert(1, Path(os.getcwd()).parent.absolute())
-sys.path.insert(1, '/app/fhir/')
+print(Path(os.getcwd()).parent.absolute())
+# sys.path.insert(1, Path(os.getcwd()).parent.absolute())
+# sys.path.insert(1, '/app/fhir/')
+sys.path.insert(1, '../')
 # ##
 # os.getcwd()
 # os.chdir(os.path.join(os.getcwd(), "FHIR"))
@@ -50,7 +51,7 @@ except SystemExit as e:
 # can only set this once, first thing to set
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
-local_css("../utils/style.css")
+local_css(os.path.join(Path(os.getcwd()).parent.absolute(), "utils", "style.css"))
 
 with st.container():
 	st.title("TS-Registry Visualization Tool")
