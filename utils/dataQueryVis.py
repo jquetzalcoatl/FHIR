@@ -7,6 +7,7 @@ import pytz
 utc=pytz.UTC
 
 from pathlib import Path
+sys.path.insert(1, '/app/fhir/utils')
 # sys.path.insert(1, os.path.join(Path(os.getcwd()).parent.absolute(), 'utils'))
 # path = Path("/here/your/path/file/")
 # print(path.parent.absolute())
