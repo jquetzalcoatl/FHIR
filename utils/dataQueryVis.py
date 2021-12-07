@@ -1,5 +1,3 @@
-from utils.BGriskAssesment import BGRiskAssesment
-from utils.dataTuples import codeDict, dateDict, codes, valueDict, patientDict
 import pandas as pd
 import os
 from datetime import datetime, date, timedelta
@@ -9,9 +7,13 @@ import pytz
 utc=pytz.UTC
 
 from pathlib import Path
+# sys.path.insert(1, os.path.join(Path(os.getcwd()).parent.absolute(), 'utils'))
 # path = Path("/here/your/path/file/")
 # print(path.parent.absolute())
-
+# from utils.BGriskAssesment import BGRiskAssesment
+# from utils.dataTuples import codeDict, dateDict, codes, valueDict, patientDict
+from BGriskAssesment import BGRiskAssesment
+from dataTuples import codeDict, dateDict, codes, valueDict, patientDict
 
 class dataQuery(object):
 	def __init__(self, date='2021-09-10', ptId=0, dateStart=0, dateEnd=0, thrsUL=55, thrsBR=80, thrsAR=200):

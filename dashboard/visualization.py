@@ -13,15 +13,20 @@ import sys
 
 from pathlib import Path
 print(Path(os.getcwd()).parent.absolute())
-# sys.path.insert(1, Path(os.getcwd()).parent.absolute())
+sys.path.insert(1, os.path.join(Path(os.getcwd()).parent.absolute(), 'utils'))
 # sys.path.insert(1, '/app/fhir/')
-sys.path.insert(1, '../')
+# sys.path.insert(1, '../')
+
+
 # ##
 # os.getcwd()
-# os.chdir(os.path.join(os.getcwd(), "FHIR"))
-from utils.load_css import local_css, textFunc, statsTextFunc
-from utils.dataQueryVis import dataQuery, Stat
-from utils.dataTuples import codes
+# os.chdir(os.path.join(os.getcwd(),  "FHIR", "dashboard"))
+# from utils.load_css import local_css, textFunc, statsTextFunc
+# from utils.dataQueryVis import dataQuery, Stat
+# from utils.dataTuples import codes
+from load_css import local_css, textFunc, statsTextFunc
+from dataQueryVis import dataQuery, Stat
+from dataTuples import codes
 alt.data_transformers.disable_max_rows()
 
 
