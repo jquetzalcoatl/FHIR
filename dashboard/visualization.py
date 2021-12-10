@@ -12,7 +12,7 @@ import base64
 import sys
 
 from pathlib import Path
-print(Path(os.getcwd()).parent.absolute())
+# print(Path(os.getcwd()).parent.absolute())
 sys.path.insert(1, os.path.join(Path(os.getcwd()).parent.absolute(), 'utils'))
 sys.path.insert(1, '/app/fhir/utils')
 # sys.path.insert(1, '../')
@@ -461,7 +461,7 @@ if option == "Aggregated Level":
 			thrsAR = st.slider("Select above range threshold", min_value=thrsBR+1 * alpha, max_value = 396 * alpha, value=thrsBR+126 * alpha, step = alpha)
 
 
-	a.getStatsDf(ndayList = options)
+	a.getStatsDf(options, thrsUL, thrsBR, thrsAR)
 	def plotAgg():
 		fig, ax = plt.subplots(figsize=(7, 7))
 		s = len(a.ptAggReducedDF.keys())

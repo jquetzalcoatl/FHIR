@@ -295,11 +295,11 @@ class Stat(dataQuery):
 				'GMI' : str(round(np.mean(self.PtDF[pt][codes['CGM']]['dfReduced']['CGM']) * 0.02392 + 3.31, 2)),
 				}
 
-	def genTmpDf(self, ndayList = [7,14,21]):
+	def genTmpDf(self, ndayList = [7,14,21], thrsUL=55, thrsBR=80, thrsAR=200):
 		df = {}
 		for nDays in ndayList:
 			self.createReducedDF(nDays)
-			self.addStats()
+			self.addStats(thrsUL, thrsBR, thrsAR)
 			df[str(nDays)] = {"df" : pd.concat([self.PtDF[pt][codes['CGM']]['dfReduced'] for pt in self.PtDF.keys()], ignore_index=True)}
 			# , "stats" : [{pt : self.PtDF[pt][codes['CGM']]['stats']} for pt in self.PtDF.keys()]}
 			df[str(nDays)]['stats'] = {}
@@ -328,8 +328,8 @@ class Stat(dataQuery):
 				pass
 		return statsDF
 
-	def getStatsDf(self, ndayList = [7,14,21]):
-		self.ptAggReducedDF = self.genTmpDf(ndayList)
+	def getStatsDf(self, ndayList = [7,14,21], thrsUL=55, thrsBR=80, thrsAR=200):
+		self.ptAggReducedDF = self.genTmpDf(ndayList, thrsUL, thrsBR, thrsAR)
 		self.statDF = self.makeStatsDf(self.ptAggReducedDF)
 
 if __name__ == '__main__':
