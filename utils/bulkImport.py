@@ -46,8 +46,8 @@ class bulkImport(object):
 			self.logging.info('bulkImport - Binaries Loaded!')
 
 	def getBinaryLinks(self):
-		# self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"})
-		self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"}, auth=(tok["username"], tok["pwd"]))
+		self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"})
+		# self.BulkRequest = requests.get(self.path, headers={"Prefer" : "respond-async"}, auth=(tok["username"], tok["pwd"]))
 		self.BulkRequestHeaderDict = dict(self.BulkRequest.headers)
 		self.binariesRequest = requests.get(self.BulkRequestHeaderDict['Content-Location'])
 
