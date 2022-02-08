@@ -5,4 +5,4 @@ datetime
 seaborn
 altair
 argparse
-streamlit==1.0.0
+streamlit==1.5.0
