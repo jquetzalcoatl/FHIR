@@ -25,8 +25,8 @@ sys.path.insert(1, '/app/fhir/utils')
 # from utils.dataQueryVis import dataQuery, Stat
 # from utils.dataTuples import codes
 from load_css import local_css, textFunc, statsTextFunc
-# from dataQueryVis import dataQuery, Stat
-from dataQueryVisV2 import dataQuery, Stat
+from dataQueryVis import dataQuery, Stat
+# from dataQueryVisV2 import dataQuery, Stat
 from dataTuples import codes
 alt.data_transformers.disable_max_rows()
 
