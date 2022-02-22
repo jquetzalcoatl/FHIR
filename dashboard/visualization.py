@@ -73,10 +73,10 @@ a = loadData()
 
 with st.sidebar:
 	with st.expander("Login", expanded = True):
-		user = st.text_input("User:", value="")
+		user = st.selectbox("User", ("", "Researcher", ))
 		pwd = st.text_input("Password:", value="", type="password", disabled=False)
 
-if pwd == "Password" and user == "User":
+if user == "Researcher":
 	option = st.sidebar.selectbox("Select Dashboard", ("Patient Level", "Aggregated Level"))
 
 	if option == "Patient Level":
