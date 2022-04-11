@@ -57,8 +57,8 @@ except SystemExit as e:
 # can only set this once, first thing to set
 apptitle = 'TS-Registry Dashboard'
 st.set_page_config(page_title=apptitle, layout="wide")
-local_css(os.path.join(Path(os.getcwd()).parent.absolute(), "utils", "style.css"))
-# local_css(os.path.join(os.getcwd(), "utils", "style.css"))
+# local_css(os.path.join(Path(os.getcwd()).parent.absolute(), "utils", "style.css"))
+local_css(os.path.join(os.getcwd(), "utils", "style.css"))
 
 with st.container():
 	st.title("TS-Registry Visualization Tool")
